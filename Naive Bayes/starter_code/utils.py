@@ -23,7 +23,7 @@ def load_training_set(percentage_positives, percentage_negatives):
     positive_instances = []
     negative_instances = []
 
-    df = pd.read_csv('train-positive.csv')
+    df = pd.read_csv('Naive Bayes/starter_code/train-positive.csv')
     for _, contents in df.iterrows():
         contents = contents['reviewText']
         if random.random() > percentage_positives:
@@ -32,7 +32,7 @@ def load_training_set(percentage_positives, percentage_negatives):
         positive_instances.append(contents)
         vocab = vocab.union(set(contents))
 
-    df = pd.read_csv('train-negative.csv')
+    df = pd.read_csv('Naive Bayes/starter_code/train-negative.csv')
     for _, contents in df.iterrows():
         contents = contents['reviewText']
         if random.random() > percentage_negatives:
@@ -48,14 +48,14 @@ def load_test_set(percentage_positives, percentage_negatives):
     positive_instances = []
     negative_instances = []
 
-    df = pd.read_csv('test-positive.csv')
+    df = pd.read_csv('Naive Bayes/starter_code/test-positive.csv')
     for _, contents in df.iterrows():
         contents = contents['reviewText']
         if random.random() > percentage_positives:
             continue
         contents = preprocess_text(contents)
         positive_instances.append(contents)
-    df = pd.read_csv('test-negative.csv')
+    df = pd.read_csv('Naive Bayes/starter_code/test-negative.csv')
     
     for _, contents in df.iterrows():
         contents = contents['reviewText']
