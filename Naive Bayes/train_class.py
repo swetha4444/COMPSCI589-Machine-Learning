@@ -13,17 +13,20 @@ class TrainClassObject:
     
     def generateMultinomialFrequency(self,classData):
         for doc in classData:
-            for word in generateWordFreq(doc):
+            for word,count in generateWordFreq(doc):
                 # if doc in self.freqMap.keys():
-                self.freqMap[word[0]] += word[1]
+                # print(word,count,self.freqMap[word],"\n")
+                self.freqMap[word] += count
 
     def computeTotalWords(self):
         self.totalCount = sum(self.freqMap.values())
     
     def calculatePosteriorProbality(self,testDoc):
         prob = 1 if not self.logProb else 0
+        # print(self.freqMap)
+        # print(self.logProb,prob)
         for word in testDoc:
-            n_wi = (0 + self.laplaceFactor) if word not in self.freqMap.keys() else (self.freqMap(word)+self.laplaceFactor)
+            n_wi = (self.freqMap[word] + self.laplaceFactor) if word in self.freqMap.keys() else (0 + self.laplaceFactor)
             n_y = self.totalCount + (self.laplaceFactor * len(self.bow))
             if(self.logProb):
                 prob += math.log10(n_wi/n_y)
