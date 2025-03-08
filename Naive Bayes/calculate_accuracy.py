@@ -9,7 +9,7 @@ class CalculateAccuracy:
         self.labels = labels
 
     def accuracy(self):
-        correct_predictions = np.sum(self.test == self.pred)
+        correct_predictions = np.sum(np.array(self.test) == np.array(self.pred))
         total_predictions = len(self.test)
         accuracy = correct_predictions / total_predictions
         return accuracy * 100
@@ -28,7 +28,7 @@ class CalculateAccuracy:
             n = self.cm[i][i]
             d = np.sum(self.cm[:,i])
             self.precision[i] = n / d
-        return np.mean(self.precision)
+        return np.mean(self.precision)*100
     
     def recall(self):
         self.recall = np.zeros(len(self.labels))
@@ -36,7 +36,7 @@ class CalculateAccuracy:
             n = self.cm[i][i]
             d = np.sum(self.cm[i,:])
             self.recall[i] = n / d
-        return np.mean(self.recall)
+        return np.mean(self.recall)*100
 
     def plotConfusionMatrix(self):
         plt.figure(figsize=(10, 7))

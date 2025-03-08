@@ -17,7 +17,7 @@ trainData = {
     "negative":neg_train
 }
 print("check len train:pos,neg,both",len(pos_train),len(neg_train),len(pos_train)+len(neg_train))
-model = NaiveBayes(laplaceFactor=0,logProb=False)
+model = NaiveBayes(laplaceFactor=1,logProb=True)
 model.fit(trainData=trainData,bow=vocab)
 print("check len test:pos,neg,both",len(pos_test),len(neg_test),len(pos_test)+len(neg_test))
 
@@ -29,15 +29,13 @@ actual.extend(list(itertools.repeat("positive", len(pos_test))))
 actual.extend(list(itertools.repeat("negative", len(neg_test))))
 
 pred = model.predict(y)
+print(len(pred),len(actual),pred==actual)
 accObj = CalculateAccuracy(test=actual,pred=pred,labels=["positive","negative"])
 
 print("Confusion Matrix")
 print(accObj.confusion_matrix())
 accObj.plotConfusionMatrix()
-print("Accuracy")
-print(accObj.accuracy())
-print("Precision")
-print(accObj.precision())
-print("Recall")
-print(accObj.recall())
-accObj.plotPrecisionRecall()
+print("Accuracy: ",accObj.accuracy())
+print("Precision: ",accObj.precision())
+print("Recall: ",accObj.recall())
+# accObj.plotPrecisionRecall()
