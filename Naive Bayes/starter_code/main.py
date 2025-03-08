@@ -15,3 +15,4 @@ if __name__ == '__main__':
     print("Number of positive training instances:", len(pos_train))
     print("Number of positive test instances:", len(pos_test))
     print("Number of negative test instances:", len(neg_test))
+    
