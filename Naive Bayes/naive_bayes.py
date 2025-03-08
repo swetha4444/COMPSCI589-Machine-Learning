@@ -1,6 +1,7 @@
 from train_class import TrainClassObject
 import numpy as np
 import math
+import random
 
 class NaiveBayes:
     def __init__(self,laplaceFactor=0,logProb=False):
@@ -27,11 +28,15 @@ class NaiveBayes:
     def predict_X(self,testDoc):
         predClass = None
         currP = 0 if not self.logProb else -math.inf
+        labels = []
         for trainObject in self.trainObjectList:
+            labels.append(trainObject.className)
             tempP = trainObject.calculatePosteriorProbality(testDoc)
             if tempP > currP:
                 currP = tempP
                 predClass = trainObject.className
+        if predClass is None:
+            return random.choice(labels)
         return predClass
     
     def predict(self,y):

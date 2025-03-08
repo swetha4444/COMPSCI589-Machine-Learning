@@ -1,6 +1,5 @@
 from utils import load_training_set, load_test_set
 
-
 if __name__ == '__main__':
     percentage_positive_instances_train = 0.1
     percentage_negative_instances_train = 0.1
