@@ -2,6 +2,7 @@ from naive_bayes import NaiveBayes
 import numpy as np
 from calculate_accuracy import CalculateAccuracy
 import matplotlib.pyplot as plt
+from computation import randomColorGenerator
 
 class NaiveBayesSampler:
     def __init__(self, labels, title, laplaceRange = [0], logProb = False, plotCM = False):
@@ -40,6 +41,11 @@ class NaiveBayesSampler:
             self.precision.append(accObj.precision())
             self.recall.append(accObj.recall())
 
+    def superimposePrint(self):
+        self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies,self.precision,self.recall],
+                                        metricNames=["Accuracy","Precision","Recall"],
+                                        plotTile="All metric vs Laplace Factor")
+
     def plotAccuracy(self):
         plt.figure(figsize=(10, 7))
         x_positions = range(len(self.laplaceRange))
@@ -75,6 +81,20 @@ class NaiveBayesSampler:
         plt.ylabel('Recall')
         plt.title('Recall vs Laplace Factor: '+self.title)
         # plt.legend()
+        plt.show()
+
+    def plotMetricVsLaplaceFactor(self,metricValues=[],metricNames=[],yLabel="",plotTile=""):
+        plt.figure(figsize=(10, 7))
+        # plot all values in one graph
+        for i in range(len(metricValues)):
+            x_positions = range(len(self.laplaceRange))
+            plt.plot(x_positions, metricValues[i], marker='o',color=randomColorGenerator(),label=metricNames[i])
+            plt.xticks(x_positions, labels=[str(val) for val in self.laplaceRange])
+            plt.grid()
+        plt.xlabel('Laplace Factor')
+        plt.ylabel('Metric '+yLabel)
+        plt.title(plotTile+': '+self.title)
+        plt.legend()
         plt.show()
 
         

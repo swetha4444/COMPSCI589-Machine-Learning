@@ -1,4 +1,6 @@
 from collections import Counter
+import random
+import matplotlib as plt
 
 def generateWordFreq(doc_vector):
     return Counter(doc_vector).items()
@@ -14,3 +16,6 @@ def extendList(*lists):
     for list in lists:
         finalList.extend(list)
     return finalList
+
+def randomColorGenerator():
+    return plt.colors.to_hex((random.random(),random.random(),random.random()))
