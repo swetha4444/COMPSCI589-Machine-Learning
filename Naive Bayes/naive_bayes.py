@@ -20,10 +20,9 @@ class NaiveBayes:
             trainData: map of className:classData
             trainObjectList: internal list of train objects for each class
         '''
-        total_classes = len(trainData)
         widgets = ['Training Model: ', progressbar.Percentage(), ' ',
                 progressbar.Bar(), ' ', progressbar.ETA()]
-        bar = progressbar.ProgressBar(maxval=total_classes, widgets=widgets).start()
+        bar = progressbar.ProgressBar(maxval=len(trainData), widgets=widgets).start()
         
         self.trainObjectList: list[TrainClassObject] = []
         totalDataCount = sum(len(data) for data in trainData.values())
@@ -52,14 +51,15 @@ class NaiveBayes:
     
     def predict(self,y):
         pred = []
-        # widgets = ['Testing Model: ', progressbar.AnimatedMarker()]
-        # bar = progressbar.ProgressBar(widgets=widgets).start()
-        i = 0
+        widgets = ['Testing Model: ', progressbar.Percentage(), ' ',
+                progressbar.Bar(), ' ', progressbar.ETA()]
+        bar = progressbar.ProgressBar(maxval=len(y)+1, widgets=widgets).start()
+        i = 1
         for doc in y:
-            # bar.update(i)
             i+=1
             pred.append(self.predict_X(doc))
-        # bar.finish()
+            bar.update(i)
+        bar.finish()
         return pred
     
     def accuracy(self,pred,test):

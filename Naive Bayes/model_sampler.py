@@ -47,41 +47,19 @@ class NaiveBayesSampler:
                                         plotTile="All metric vs Laplace Factor")
 
     def plotAccuracy(self):
-        plt.figure(figsize=(10, 7))
-        x_positions = range(len(self.laplaceRange))
-        plt.plot(x_positions, self.accuracies, marker='o')
-        plt.xticks(x_positions, labels=[str(val) for val in self.laplaceRange])
-        # plt.plot(self.laplaceRange, self.accuracies, marker='o')
-        plt.grid()
-        plt.xlabel('Laplace Factor')
-        plt.ylabel('Accuracy')
-        plt.title('Accuracy vs Laplace Factor: '+self.title)
-        # plt.legend()
-        plt.show()
+        self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies],
+                                        metricNames=["Accuracy"],
+                                        plotTile="Accuracy vs Laplace Factor")
 
     def plotPrecision(self):
-        plt.figure(figsize=(10, 7))
-        x_positions = range(len(self.laplaceRange))
-        plt.plot(x_positions, self.precision, marker='o')
-        plt.xticks(x_positions, labels=[str(val) for val in self.laplaceRange])
-        plt.grid()
-        plt.xlabel('Laplace Factor')
-        plt.ylabel('Precision')
-        plt.title('Precision vs Laplace Factor: '+self.title)
-        # plt.legend()
-        plt.show()
+        self.plotMetricVsLaplaceFactor(metricValues=[self.precision],
+                                        metricNames=["Precision"],
+                                        plotTile="Precision vs Laplace Factor")
     
     def plotRecall(self):
-        plt.figure(figsize=(10, 7))
-        x_positions = range(len(self.laplaceRange))
-        plt.plot(x_positions, self.recall, marker='o')
-        plt.xticks(x_positions, labels=[str(val) for val in self.laplaceRange])
-        plt.grid()
-        plt.xlabel('Laplace Factor')
-        plt.ylabel('Recall')
-        plt.title('Recall vs Laplace Factor: '+self.title)
-        # plt.legend()
-        plt.show()
+        self.plotMetricVsLaplaceFactor(metricValues=[self.recall],
+                                        metricNames=["Recall"],
+                                        plotTile="Recall vs Laplace Factor")
 
     def plotMetricVsLaplaceFactor(self,metricValues=[],metricNames=[],yLabel="",plotTile=""):
         plt.figure(figsize=(10, 7))
