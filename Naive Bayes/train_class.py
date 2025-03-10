@@ -2,6 +2,8 @@ from computation import generateWordFreq
 
 from collections import Counter
 import math
+from decimal import *
+
 class TrainClassObject:
     def __init__(self,className,bow,prioriProb,laplaceFactor=0,logProb=False):
         self.className = className
@@ -21,18 +23,22 @@ class TrainClassObject:
     def computeTotalWords(self):
         self.totalCount = sum(self.freqMap.values())
     
-    def calculatePosteriorProbality(self,testDoc):
-        prob = 1 if not self.logProb else 0
-        # print(self.freqMap)
-        # print(self.logProb,prob)
-        for word in testDoc:
-            n_wi = (self.freqMap[word] + self.laplaceFactor) if word in self.freqMap.keys() else (0 + self.laplaceFactor)
-            n_y = self.totalCount + (self.laplaceFactor * len(self.bow))
-            if(self.logProb):
-                prob += math.log10(n_wi/n_y)
-            else:
-                prob *= n_wi/n_y
-        return self.prioriProb * prob if not self.logProb else math.log10(self.prioriProb) + prob
+    def calculatePosteriorProbality(self, testDoc):
+        n_y = Decimal(self.totalCount + (self.laplaceFactor * len(self.bow)))
+        
+        if self.logProb:
+            prob = Decimal(0)
+            for word in testDoc:
+                n_wi = Decimal(self.freqMap.get(word, 0) + self.laplaceFactor)
+                prob += ((Decimal(n_wi).ln() - Decimal(n_y).ln()))
+                # (n_wi/n_y).ln()
+            return Decimal(self.prioriProb).ln() + prob
+        else:
+            prob = Decimal(1)
+            for word in testDoc:
+                n_wi = Decimal(self.freqMap.get(word, 0) + self.laplaceFactor)
+                prob *= (n_wi/n_y)
+            return self.prioriProb * prob
     
     def createFrequencyMatrix(self,classData):
         self.generateMultinomialFrequency(classData)

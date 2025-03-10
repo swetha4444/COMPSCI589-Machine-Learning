@@ -38,13 +38,13 @@ class CalculateAccuracy:
             self.recall[i] = n / d
         return np.mean(self.recall)*100
 
-    def plotConfusionMatrix(self):
+    def plotConfusionMatrix(self,title="Confusion Matrix"):
         plt.figure(figsize=(10, 7))
         sns.heatmap(self.cm, annot=True, fmt='d', cmap='Blues', 
                     xticklabels=self.labels, yticklabels=self.labels)
         plt.xlabel('Predicted')
         plt.ylabel('Actual')
-        plt.title('Confusion Matrix')
+        plt.title(title)
         plt.show()
 
     def plotPrecisionRecall(self):
