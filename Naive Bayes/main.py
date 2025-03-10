@@ -49,15 +49,15 @@ sampler.plotRecall()
 '''
 Q3; 100% test and 100% train with the best laplace smoothening factor and log prob
 '''
-# max_alpha = laplaceRange[np.argmax(sampler.accuracies)]
-# print("Max alpha: ",max_alpha)
-# percentage_positive_instances_train = 1
-# percentage_negative_instances_train = 1
-# percentage_positive_instances_test = 1
-# percentage_negative_instances_test = 1
-# (pos_train, neg_train, vocab) = load_training_set(percentage_positive_instances_train, percentage_negative_instances_train)
-# (pos_test, neg_test) = load_test_set(percentage_positive_instances_test, percentage_negative_instances_test)
-# sampler = NaiveBayesSampler(labels=["positive","negative"],
-#                             title="Standard MNB with 100% train and 100% test",
-#                             plotCM=True,laplaceRange=[max_alpha],logProb=True)
+max_alpha = laplaceRange[np.argmax(sampler.accuracies)]
+print("Max alpha: ",max_alpha)
+percentage_positive_instances_train = 1
+percentage_negative_instances_train = 1
+percentage_positive_instances_test = 1
+percentage_negative_instances_test = 1
+(pos_train, neg_train, vocab) = load_training_set(percentage_positive_instances_train, percentage_negative_instances_train)
+(pos_test, neg_test) = load_test_set(percentage_positive_instances_test, percentage_negative_instances_test)
+sampler = NaiveBayesSampler(labels=["positive","negative"],
+                            title="Standard MNB with 100% train and 100% test",
+                            plotCM=True,laplaceRange=[max_alpha],logProb=True)
 
