@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 runCommand = [True,False,False,False,False]
-plot_saturation_graph = False
+plotSaturationGraph = False
 
 '''
 Q1: 20% test; 20% train and no laplace smoothening
@@ -137,7 +137,7 @@ if runCommand[4]:
 '''
 ANNEX: Plot to find the saturation threshold for the MNB model:
 '''
-if plot_saturation_graph:
+if plotSaturationGraph:
     percentage_train = [0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
     accuracies, precisions, recalls = [],[],[]
     percentage_positive_instances_test = 1

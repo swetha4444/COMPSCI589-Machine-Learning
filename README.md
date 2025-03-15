@@ -107,3 +107,43 @@ The analyser object performs some basic analysis on the data and gives some visu
     analyserObj.plot()
     analyserObj.plot_pie()
     ```
+
+## Multinomial Naive Bayes
+The `NaiveBayesSampler` class handles model training, evaluation, and visualization.
+### Parameters
+
+- `labels`: List of class labels (e.g., ["positive", "negative"])
+- `title`: Title for plots and output
+- `laplaceRange`: List of Laplace smoothing factors to test
+- `logProb`: Whether to use log probabilities (recommended for numerical stability)
+- `plotCM`: Whether to plot confusion matrices
+- `classificationType`: 'binary' or 'multiclass' (default: 'binary')
+
+```python
+# Create a sampler instance
+sampler = NaiveBayesSampler(
+    labels=["positive", "negative"],
+    title="Standard MNB with 20% train and 20% test",
+    laplaceRange=[0.0001, 0.001, 0.01, 0.1, 1, 10],
+    logProb=True,
+    plotCM=True
+)
+
+# Train and evaluate the model
+sampler.sampler(
+    trainData=trainData,  # Dictionary mapping class labels to training documents
+    X_test=test_docs,    # List of test documents
+    y_test=test_labels,  # List of true labels
+    bow=vocabulary       # Set of all unique words
+)
+```
+
+```python
+# Plot individual metrics
+sampler.plotAccuracy()     # Accuracy vs Laplace factor
+sampler.plotPrecision()    # Precision vs Laplace factor
+sampler.plotRecall()       # Recall vs Laplace factor
+
+# Plot all metrics together
+sampler.superimposePrint() # Combined plot of accuracy, precision, recall
+```
