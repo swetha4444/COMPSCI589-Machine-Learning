@@ -1,4 +1,4 @@
-from starter_code.utils import load_training_set, load_test_set
+from starter_code.utils import load_training_set, load_test_set, set_random_seed
 from collections import Counter
 from naive_bayes import NaiveBayes
 import itertools
@@ -8,13 +8,14 @@ from computation import trainDataFormatter, extendList
 import numpy as np
 import matplotlib.pyplot as plt
 
-runCommand = [True,False,False,False,False]
-plotSaturationGraph = False
+runCommand = [True,True,False,False,False]
+plot_saturation_graph = False
 
 '''
 Q1: 20% test; 20% train and no laplace smoothening
 '''
 if runCommand[0]:
+    set_random_seed(None)
     percentage_positive_instances_train = 0.2
     percentage_negative_instances_train = 0.2
     percentage_positive_instances_test = 0.2
@@ -34,6 +35,7 @@ if runCommand[0]:
 Q2: 20% test; 20% train and with laplace smoothening factor ranges with log
 '''
 if runCommand[1]:
+    set_random_seed(42)
     percentage_positive_instances_train = 0.2
     percentage_negative_instances_train = 0.2
     percentage_positive_instances_test = 0.2
@@ -49,7 +51,7 @@ if runCommand[1]:
     actual = extendList(list(itertools.repeat("positive", len(pos_test))),list(itertools.repeat("negative", len(neg_test))))
     sampler.sampler(trainData=trainData,X_test=y,y_test=actual,bow=vocab)
     sampler.plotAccuracy()
-    sampler.superimposePrint()
+    # sampler.superimposePrint()
 
     # For alpha=1
     sampler = NaiveBayesSampler(labels=["positive","negative"],
@@ -69,6 +71,7 @@ if runCommand[1]:
 Q3: 100% test and 100% train with the best laplace smoothening factor and log prob
 '''
 if runCommand[2]:
+    set_random_seed(None)
     max_alpha = 1
     print("Max alpha: ",max_alpha)
     percentage_positive_instances_train = 1
@@ -92,6 +95,7 @@ if runCommand[2]:
 Q4: 100% test and 30% train with the best laplace smoothening factor and log prob
 '''
 if runCommand[3]:
+    set_random_seed(None)
     percentage_positive_instances_train = 0.3
     percentage_negative_instances_train = 0.3
     percentage_positive_instances_test = 1
@@ -116,6 +120,7 @@ if runCommand[3]:
 Q6: 100% test and 10:50 train with the best laplace smoothening factor and log prob
 '''
 if runCommand[4]:
+    set_random_seed(None)
     percentage_positive_instances_train = 0.1
     percentage_negative_instances_train = 0.5
     percentage_positive_instances_test = 1
@@ -137,7 +142,8 @@ if runCommand[4]:
 '''
 ANNEX: Plot to find the saturation threshold for the MNB model:
 '''
-if plotSaturationGraph:
+set_random_seed(None)
+if plot_saturation_graph:
     percentage_train = [0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
     accuracies, precisions, recalls = [],[],[]
     percentage_positive_instances_test = 1

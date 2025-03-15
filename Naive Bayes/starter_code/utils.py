@@ -9,6 +9,9 @@ REPLACE_WITH_SPACE = re.compile("(<br\s*/><br\s*/>)|(\-)|(\/)")
 nltk.download('stopwords')
 
 
+def set_random_seed(seed=None):
+    random.seed(seed)
+
 def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     text = REPLACE_NO_SPACE.sub("", text)
