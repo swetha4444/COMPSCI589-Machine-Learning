@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from computation import randomColorGenerator
 
 class NaiveBayesSampler:
-    def __init__(self, labels, title, laplaceRange = [0], logProb = False, plotCM = False):
+    def __init__(self, labels, title, laplaceRange = [0], logProb = False, plotCM = False, classificationType='binary'):
         self.laplaceRange = laplaceRange
         self.logProb = logProb
         self.labels = labels
@@ -14,6 +14,7 @@ class NaiveBayesSampler:
         self.precision = []
         self.recall = []
         self.plotCM = plotCM
+        self.classificationType = classificationType
     
     def createModel(self, trainData, bow, laplaceFactor):
         model = NaiveBayes(laplaceFactor=laplaceFactor, logProb=self.logProb)
@@ -38,13 +39,13 @@ class NaiveBayesSampler:
             if self.plotCM:
                 accObj.plotConfusionMatrix(title="Confusion Matrix for Laplace Factor: "+str(laplaceFactor))
             self.accuracies.append(accObj.accuracy())
-            self.precision.append(accObj.precision())
-            self.recall.append(accObj.recall())
+            self.precision.append(accObj.precision_binary() if self.classificationType == 'binary' else accObj.precision())
+            self.recall.append(accObj.recall_binary() if self.classificationType == 'binary' else accObj.recall())
 
     def superimposePrint(self):
         self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies,self.precision,self.recall],
                                         metricNames=["Accuracy","Precision","Recall"],
-                                        plotTile="All metric vs Laplace Factor")
+                                        plotTile="All metric vs Laplace Factor",annotate=False)
 
     def plotAccuracy(self):
         self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies],
@@ -61,16 +62,26 @@ class NaiveBayesSampler:
                                         metricNames=["Recall"],
                                         plotTile="Recall vs Laplace Factor")
 
-    def plotMetricVsLaplaceFactor(self,metricValues=[],metricNames=[],yLabel="",plotTile=""):
+    def plotMetricVsLaplaceFactor(self,metricValues=[],metricNames=[],yLabel="",plotTile="",annotate=True):
         plt.figure(figsize=(10, 7))
         # plot all values in one graph
         for i in range(len(metricValues)):
             x_positions = range(len(self.laplaceRange))
-            plt.plot(x_positions, metricValues[i], marker='o',color=randomColorGenerator(),label=metricNames[i])
+            color = randomColorGenerator()
+            plt.plot(x_positions, metricValues[i], marker='o',color=color,label=metricNames[i])
             plt.xticks(x_positions, labels=[str(val) for val in self.laplaceRange])
             plt.grid()
-        plt.xlabel('Laplace Factor')
-        plt.ylabel('Metric '+yLabel)
+
+            if annotate:
+                for x, y in zip(x_positions, metricValues[i]):
+                    plt.text(
+                        x, y, f"{y:.2f}",
+                        fontsize=10, ha='center', va='bottom',
+                        bbox=dict(facecolor='white', edgecolor=color, boxstyle='round,pad=0.2')
+                )
+
+        plt.xlabel(r'α (Laplace Factor/ Alpha Value)', fontsize=12, fontweight='light')
+        plt.ylabel('Metric '+yLabel, fontsize=12, fontweight='light')
         plt.title(plotTile+': '+self.title)
         plt.legend()
         plt.show()
