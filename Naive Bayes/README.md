@@ -80,6 +80,10 @@ sampler.sampler(
 ```
 
 ```python
+# Print individual metrics
+print("Accuracy: ",sampler.accuracies[0])
+print("Precision: ",sampler.precision[0])
+print("Recall: ",sampler.recall[0])
 # Plot individual metrics
 sampler.plotAccuracy()     # Accuracy vs Laplace factor
 sampler.plotPrecision()    # Precision vs Laplace factor
