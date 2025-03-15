@@ -1,6 +1,8 @@
 from collections import Counter
 import random
 import matplotlib as plt
+import numpy as np
+import matplotlib.pyplot as pltp
 
 def generateWordFreq(doc_vector):
     return Counter(doc_vector).items()
