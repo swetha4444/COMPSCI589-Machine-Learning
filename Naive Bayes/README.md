@@ -48,6 +48,7 @@ Each value in the runCommand list is to run the code for the respective question
    - 10% positive, 50% negative training data
    - 100% test data
    - Optimal Laplace factor
+   - Log probability implementation
 
 ## Using the NaiveBayesSampler
 
