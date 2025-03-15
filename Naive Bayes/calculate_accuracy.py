@@ -37,14 +37,26 @@ class CalculateAccuracy:
             d = np.sum(self.cm[i,:])
             self.recall[i] = n / d
         return np.mean(self.recall)*100
+    
+    def precision_binary(self, pos_class_index=0):
+        tp = self.cm[pos_class_index, pos_class_index]
+        fp = np.sum(self.cm[:, pos_class_index]) - tp 
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        return precision * 100
 
-    def plotConfusionMatrix(self):
+    def recall_binary(self, pos_class_index=0):
+        tp = self.cm[pos_class_index, pos_class_index]
+        fn = np.sum(self.cm[pos_class_index, :]) - tp
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        return recall * 100
+
+    def plotConfusionMatrix(self,title="Confusion Matrix"):
         plt.figure(figsize=(10, 7))
         sns.heatmap(self.cm, annot=True, fmt='d', cmap='Blues', 
                     xticklabels=self.labels, yticklabels=self.labels)
         plt.xlabel('Predicted')
         plt.ylabel('Actual')
-        plt.title('Confusion Matrix')
+        plt.title(title)
         plt.show()
 
     def plotPrecisionRecall(self):
