@@ -8,7 +8,7 @@ from computation import trainDataFormatter, extendList
 import numpy as np
 import matplotlib.pyplot as plt
 
-runCommand = [True,True,False,False,False]
+runCommand = [True,False,False,False,False]
 plot_saturation_graph = False
 
 '''
@@ -51,7 +51,7 @@ if runCommand[1]:
     actual = extendList(list(itertools.repeat("positive", len(pos_test))),list(itertools.repeat("negative", len(neg_test))))
     sampler.sampler(trainData=trainData,X_test=y,y_test=actual,bow=vocab)
     sampler.plotAccuracy()
-    # sampler.superimposePrint()
+    sampler.superimposePrint()
 
     # For alpha=1
     sampler = NaiveBayesSampler(labels=["positive","negative"],

@@ -45,7 +45,7 @@ class NaiveBayesSampler:
     def superimposePrint(self):
         self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies,self.precision,self.recall],
                                         metricNames=["Accuracy","Precision","Recall"],
-                                        plotTile="All metric vs Laplace Factor",annotate=False)
+                                        plotTile="All metric vs Laplace Factor",annotate=True)
 
     def plotAccuracy(self):
         self.plotMetricVsLaplaceFactor(metricValues=[self.accuracies],
