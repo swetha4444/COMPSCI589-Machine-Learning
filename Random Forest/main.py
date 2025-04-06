@@ -7,19 +7,22 @@ from data_preprocessing import Preprocessor
 import numpy as np
 
 def run_experiment(df, ntree_values, filename):
+    # Initialize preprocessor with the dataframe
     processor = Preprocessor(df)
-    processor.preprocess()
-    X, y = processor.X, processor.y
-
+    # Get preprocessed data with one-hot encoding
+    X, y = processor.preprocess()
+    
     print_data_info(df, filename)
+    print("\nOne-hot encoded features:", processor.encoded_columns)
+    print("Final feature shape:", X.shape)
 
     all_mean_metrics = defaultdict(list)
     all_std_metrics = defaultdict(list)
 
     for ntree in ntree_values:
-        # Use the same parameters as your second code snippet
+        # Use the same parameters as before
         model = RandomForest(n_trees=ntree, max_depth=10, min_samples_split=5, min_info_gain=0.01)
-        cv = CrossValidator(model, n_splits=5)  # Use 5 splits for consistency
+        cv = CrossValidator(model, n_splits=5)
         results = cv.run(X, y)
         cv.print_results()
 
@@ -67,9 +70,9 @@ def plot_metrics_vs_ntree(all_mean_metrics, all_std_metrics, ntree_values, filen
     plt.show()
 
 def main():
-    titanic_df = pd.read_csv('Random Forest/loan.csv') #make sure that this is the same dataset as in the second code.
+    df = pd.read_csv('Random Forest/titanic.csv') #make sure that this is the same dataset as in the second code.
     ntree_values = [1, 5, 10, 20, 30, 40, 50]
-    run_experiment(titanic_df, ntree_values, 'titanic') #make sure that the filename is correct.
+    run_experiment(df, ntree_values, 'loan') #make sure that the filename is correct.
     #tune_and_plot_ntree_impact(titanic_df, 'titanic') #remove or comment this line.
 if __name__ == "__main__":
     main()
