@@ -62,3 +62,9 @@ class CrossValidator:
         for metric, values in self.results.items():
             mean_metrics[metric] = np.mean(values)
         return mean_metrics
+    
+    def get_std_metrics(self):
+        std_metrics = {}
+        for metric, values in self.results.items():
+            std_metrics[metric] = np.std(values)
+        return std_metrics
