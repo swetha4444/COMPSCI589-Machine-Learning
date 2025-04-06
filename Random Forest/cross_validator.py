@@ -42,12 +42,13 @@ class CrossValidator:
             self.model.fit(X_train, y_train)
             y_pred = self.model.predict(X_test)
 
-            from calculate_accuracy import CalculateAccuracy
+            from calculate_accuracy import CalculateAccuracy # assuming this exists
             accuracy_calculator = CalculateAccuracy(y_test, y_pred)
             self.results['accuracy'].append(accuracy_calculator.accuracy_percentage())
-            self.results['precision'].append(accuracy_calculator.precision() * 100) # Store as percentage
-            self.results['recall'].append(accuracy_calculator.recall() * 100)       # Store as percentage
-            self.results['f1'].append(accuracy_calculator.f1_score() * 100)         # Store as percentage
+            self.results['precision'].append(accuracy_calculator.precision() * 100)
+            self.results['recall'].append(accuracy_calculator.recall() * 100)
+            self.results['f1'].append(accuracy_calculator.f1_score() * 100)
+
         return self.results
 
     def print_results(self):
@@ -62,7 +63,7 @@ class CrossValidator:
         for metric, values in self.results.items():
             mean_metrics[metric] = np.mean(values)
         return mean_metrics
-    
+
     def get_std_metrics(self):
         std_metrics = {}
         for metric, values in self.results.items():

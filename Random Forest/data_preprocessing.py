@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 
 class Preprocessor:
-    def __init__(self, df):
-        self.df = df.copy()  # Work on a copy!
+    def __init__(self, df, label_col=None):
+        self.df = df.copy()
         self.X = None
         self.y = None
         self.encoder_dict = {}
         self.numerical_cols = []
         self.categorical_cols = []
-        self.label_col = None  # To store the label column name
+        self.label_col = label_col
 
     def preprocess(self):
         self._identify_cols()
@@ -17,14 +17,14 @@ class Preprocessor:
         self._handle_missing_values()
         self.X = self.df.drop(columns=[self.label_col]).values
         self.y = self.df[self.label_col].values
-        self.y = self.y.astype(int)  # Ensure labels are integers
+        self.y = self.y.astype(int)
 
     def _identify_cols(self):
-        # Find the label column (assumes it's the last column)
-        self.label_col = self.df.columns[-1]
+        if self.label_col is None:
+            self.label_col = self.df.columns[-1]
 
         for column in self.df.columns:
-            if column != self.label_col:  # Don't include the label column here
+            if column != self.label_col:
                 if pd.api.types.is_object_dtype(self.df[column]):
                     self.categorical_cols.append(column)
                 else:
@@ -38,7 +38,7 @@ class Preprocessor:
 
     def _handle_missing_values(self):
         for column in self.df.columns:
-            if column != self.label_col and self.df[column].isnull().any(): # Skip label column
+            if column != self.label_col and self.df[column].isnull().any():
                 if column in self.numerical_cols:
                     self.df[column] = self.df[column].fillna(self.df[column].mean())
                 else:

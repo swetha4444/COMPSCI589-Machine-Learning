@@ -13,7 +13,7 @@ class Node:
                           Only applicable if is_categorical is False.
         branches (dict): Dictionary mapping split criteria (category value or
                          binary key 0/1) to child nodes.
-        label (int): Class label if the node is a leaf node.
+        label (any): Class label if the node is a leaf node. (Generic type)
         is_categorical (bool): True if the split feature is categorical, False otherwise.
         depth (int): Depth of the node in the tree.
     """
@@ -21,7 +21,7 @@ class Node:
         self.feature = feature
         self.threshold = threshold  # Only used for numerical splits
         self.branches = branches if branches is not None else {}  # Dictionary for children
-        self.label = label  # Label if leaf node
+        self.label = label  # Label if leaf node (generic type)
         self.is_categorical = is_categorical  # Type of feature split
         self.depth = depth  # Store depth mainly for potential pruning or visualization
 
@@ -30,6 +30,7 @@ class DecisionTree:
     Decision Tree Classifier.
 
     Handles both categorical (multi-way split) and numerical (binary split) features.
+    Generic for multiclass classification.
 
     Attributes:
         min_samples_split (int): Minimum number of samples required to split an internal node.
@@ -49,6 +50,8 @@ class DecisionTree:
         """Builds the decision tree classifier from the training set (X, y)."""
         X = np.array(X)
         y = np.array(y)
+        if X.size == 0 or y.size ==0:
+          raise ValueError("X and Y cannot be empty")
         self.root = self._grow_tree(X, y, depth=0)
 
     def predict(self, X):
@@ -75,7 +78,7 @@ class DecisionTree:
 
         if (depth >= self.max_depth or
                 n_labels == 1 or
-                n_samples < self.min_samples_split):
+                n_samples < self.min_samples_split or n_features == 0):
             most_common_label = self._most_common_label(y)
             return Node(label=most_common_label, depth=depth)
 
@@ -176,7 +179,7 @@ class DecisionTree:
     def _entropy(self, y):
         if len(y) == 0:
             return 0
-        hist = np.bincount(y.astype(int))
+        hist = np.bincount(y) #generic type
         ps = hist / len(y)
         return -np.sum([p * np.log2(p) for p in ps if p > 0])
 
@@ -203,7 +206,6 @@ class DecisionTree:
             try:
                 val_numeric = float(feature_value)
             except ValueError:
-                print(f"Warning: Non-numeric value '{feature_value}' encountered for numerical feature {node.feature}. Using subtree majority.")
                 return self._get_subtree_majority_label(node)
 
             if val_numeric <= node.threshold:
@@ -214,7 +216,6 @@ class DecisionTree:
             if branch_key in node.branches:
                 return self._traverse_tree(x, node.branches[branch_key])
             else:
-                print(f"Warning: Missing numerical branch {branch_key} at node for feature {node.feature}. Using subtree majority.")
                 return self._get_subtree_majority_label(node)
 
     def _get_subtree_majority_label(self, node):
@@ -230,29 +231,3 @@ class DecisionTree:
                     queue.append(child_node)
 
         return self._most_common_label(np.array(labels)) if labels else None
-
-    def _find_best_numerical_split(self, X_column, y):
-        sorted_indices = np.argsort(X_column)
-        sorted_x = X_column[sorted_indices]
-        sorted_y = y[sorted_indices]
-        best_gain = -1
-        best_threshold = None
-
-        for i in range(1, len(sorted_x)):
-            if sorted_x[i] == sorted_x[i - 1]:
-                continue
-            threshold = (sorted_x[i] + sorted_x[i - 1]) / 2
-            left_idxs = np.where(X_column <= threshold)[0]
-            right_idxs = np.where(X_column > threshold)[0]
-
-            if len(left_idxs) == 0 or len(right_idxs) == 0:
-                continue
-
-            y_subsets = [y[left_idxs], y[right_idxs]]
-            gain = self._information_gain(y, y_subsets, threshold, is_categorical=False)
-
-            if gain > best_gain:
-                best_gain = gain
-                best_threshold = threshold
-
-        return best_gain, best_threshold if best_threshold is not None else (None, None)
