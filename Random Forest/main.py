@@ -233,6 +233,7 @@ def run_experiment(dataset_name,beta=1, accW=50, f1W=50):
               f"{mean_metrics['f1']:6.2f}±{std_metrics['f1']:4.2f}")
     
     print("-"*80)
+    # Add to run_experiment before plotting final results:
     plot_final_results(metrics_data, dataset_name, best_params)
 
 def checkClassImbalance(dataset):
@@ -247,17 +248,17 @@ def main():
     checkClassImbalance('loan')
     run_experiment('loan', beta=0.5, accW=30, f1W=70)
 
-    # Raisin Data set
-    checkClassImbalance('raisin')
-    run_experiment('raisin', beta=1)
+    # # Raisin Data set
+    # checkClassImbalance('raisin')
+    # run_experiment('raisin', beta=1)
 
-    # WDBC Data set
-    checkClassImbalance('wdbc')
-    run_experiment('wdbc', beta=2,  accW=20, f1W=80)
+    # # WDBC Data set
+    # checkClassImbalance('wdbc')
+    # run_experiment('wdbc', beta=2,  accW=20, f1W=80)
 
-    # Titanic Data set
-    checkClassImbalance('titanic')
-    run_experiment('titanic', beta=1,  accW=40, f1W=60)
+    # # Titanic Data set
+    # checkClassImbalance('titanic')
+    # run_experiment('titanic', beta=1,  accW=30, f1W=70)
 
 if __name__ == "__main__":
     main()
