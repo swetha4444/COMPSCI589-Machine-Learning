@@ -4,19 +4,6 @@ import math
 from collections import Counter
 
 class Node:
-    """
-    Node class for the Decision Tree.
-
-    Attributes:
-        feature (int): Index of the feature used for splitting at this node.
-        threshold (float): Threshold value used for splitting numerical features.
-                          Only applicable if is_categorical is False.
-        branches (dict): Dictionary mapping split criteria (category value or
-                         binary key 0/1) to child nodes.
-        label (any): Class label if the node is a leaf node. (Generic type)
-        is_categorical (bool): True if the split feature is categorical, False otherwise.
-        depth (int): Depth of the node in the tree.
-    """
     def __init__(self, feature=None, threshold=None, branches=None, label=None, is_categorical=None, depth=0):
         self.feature = feature
         self.threshold = threshold  # Only used for numerical splits
@@ -26,19 +13,6 @@ class Node:
         self.depth = depth  # Store depth mainly for potential pruning or visualization
 
 class DecisionTree:
-    """
-    Decision Tree Classifier.
-
-    Handles both categorical (multi-way split) and numerical (binary split) features.
-    Generic for multiclass classification.
-
-    Attributes:
-        min_samples_split (int): Minimum number of samples required to split an internal node.
-        max_depth (int): Maximum depth of the tree.
-        min_info_gain (float): Minimum information gain required to make a split.
-        root (Node): The root node of the decision tree.
-        numerical_split_method (str): Method to handle numerical splits ('average').
-    """
     def __init__(self, min_samples_split=2, max_depth=10, min_info_gain=1e-7, numerical_split_method='average'):
         self.root = None
         self.min_samples_split = min_samples_split
@@ -47,7 +21,6 @@ class DecisionTree:
         self.numerical_split_method = numerical_split_method
 
     def fit(self, X, y):
-        """Builds the decision tree classifier from the training set (X, y)."""
         X = np.array(X)
         y = np.array(y)
         if X.size == 0 or y.size ==0:
@@ -55,12 +28,10 @@ class DecisionTree:
         self.root = self._grow_tree(X, y, depth=0)
 
     def predict(self, X):
-        """Predicts class labels for samples in X."""
         X = np.array(X)
         return np.array([self._traverse_tree(x, self.root) for x in X])
 
     def _is_feature_categorical(self, X_column):
-        """Checks if a feature column is categorical (e.g., object or string type)."""
         if pd.api.types.is_object_dtype(X_column) or pd.api.types.is_string_dtype(X_column):
             try:
                 X_column.astype(float)
@@ -72,7 +43,6 @@ class DecisionTree:
         return not pd.api.types.is_numeric_dtype(X_column)
 
     def _grow_tree(self, X, y, depth):
-        """Recursively grows the decision tree."""
         n_samples, n_features = X.shape
         n_labels = len(np.unique(y))
 

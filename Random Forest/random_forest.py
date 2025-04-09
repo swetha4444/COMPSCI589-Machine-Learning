@@ -3,7 +3,7 @@ import math
 from decision_tree import DecisionTree
 
 class RandomForest:
-    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_features=None, min_info_gain=1e-5):
+    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_features=None, min_info_gain=0.01):
         self.n_trees = n_trees
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split

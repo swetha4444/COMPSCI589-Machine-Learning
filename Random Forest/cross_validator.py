@@ -1,11 +1,13 @@
 import numpy as np
 from collections import defaultdict
+from calculate_accuracy import CalculateAccuracy
 
 class CrossValidator:
-    def __init__(self, model, n_splits=5):
+    def __init__(self, model, n_splits=5, beta = 1):
         self.model = model
         self.n_splits = n_splits
         self.results = defaultdict(list)
+        self.beta = beta
 
     def stratified_k_fold(self, X, y):
         y = np.array(y)
@@ -42,21 +44,13 @@ class CrossValidator:
             self.model.fit(X_train, y_train)
             y_pred = self.model.predict(X_test)
 
-            from calculate_accuracy import CalculateAccuracy # assuming this exists
-            accuracy_calculator = CalculateAccuracy(y_test, y_pred)
-            self.results['accuracy'].append(accuracy_calculator.accuracy_percentage())
-            self.results['precision'].append(accuracy_calculator.precision() * 100)
-            self.results['recall'].append(accuracy_calculator.recall() * 100)
-            self.results['f1'].append(accuracy_calculator.f1_score() * 100)
+            calc_acc = CalculateAccuracy(y_test, y_pred)
+            self.results['accuracy'].append(calc_acc.accuracy_percentage())
+            self.results['precision'].append(calc_acc.precision() * 100)
+            self.results['recall'].append(calc_acc.recall() * 100)
+            self.results['f1'].append(calc_acc.f1_score(beta=self.beta) * 100)
 
         return self.results
-
-    def print_results(self):
-        print("\n--- Cross-Validation Results ---")
-        for metric, values in self.results.items():
-            print(f"Mean {metric.capitalize()}: {np.mean(values):.2f}%")
-            print(f"Std {metric.capitalize()}: {np.std(values):.2f}%")
-        print("-----------------------------\n")
 
     def get_mean_metrics(self):
         mean_metrics = {}

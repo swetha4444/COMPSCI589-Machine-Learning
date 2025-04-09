@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from decision_tree import fit, Node, predict, parsetree
 import progressbar
 import time
-from sklearn.model_selection import StratifiedKFold # Changed the split
 from collections import defaultdict #For majority voting
 
 class DecisionTreeSampler: # Old class is removed and functions are moved to Random Forest and CrossValidator

@@ -73,9 +73,13 @@ class CalculateAccuracy:
         else:
             raise ValueError("Invalid average parameter")
 
-    def f1_score(self, average='micro'):
+    def f1_score(self, average='micro',beta = 1):
         precision = self.precision(average=average)
         recall = self.recall(average=average)
+        
         if (precision + recall) == 0:
             return 0.0
-        return 2 * (precision * recall) / (precision + recall)
+            
+        # Calculate F-beta score
+        beta_squared = beta ** 2
+        return ((1 + beta_squared) * precision * recall) / (beta_squared * precision + recall)
