@@ -148,7 +148,7 @@ sampler.plotRecall()       # Recall vs Laplace factor
 sampler.superimposePrint() # Combined plot of accuracy, precision, recall
 ```
 
-## Random Forest Classifier -HW 3
+## Random Forest Classifier
 
 
 ###  Function: `run_random_forest`
