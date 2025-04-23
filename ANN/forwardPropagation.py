@@ -2,8 +2,9 @@ from layer import Layer
 import numpy as np
 
 class ForwardPropagation:
-    def __init(self, layers):
+    def __init__(self, layers):
         self.layers = layers
+        self.J = 0
 
     def g(self, z):
         return 1 / (1 + np.exp(-z))
@@ -11,15 +12,24 @@ class ForwardPropagation:
     def forward(self, x):
         self.layers[0].a = np.concatenate((np.array([[1]]), x), axis=0)
         for i in range(1, len(self.layers)):
-            self.layers[i].l = i
-            if i == len(self.layers) - 1: # Last layer
-                self.layers[i].a = self.g(np.dot(self.layers[i-1].weight, self.layers[i-1].a)) 
+            z = np.dot(self.layers[i - 1].weight, self.layers[i - 1].a)
+            if i == len(self.layers) - 1:
+                self.layers[i].a = self.g(z)
             else:
-                self.layers[i].a = np.concatenate((np.array([[1]]), self.g(np.dot(self.layers[i-1].weight, self.layers[i-1].a))), axis=0)
+                self.layers[i].a = np.concatenate((np.array([[1]]), self.g(z)), axis=0)
 
     def printLayers(self):
         for layer in self.layers:
             layer.printA()
             layer.printWeight()
-            print("--------------------------------------------------")
 
+    def calculateError(self, y):
+        y = np.array(y)
+        # Compute the cost function
+        predictions = self.layers[-1].a  # Output layer activations
+        self.J += -np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions)) / len(y)
+        return self.J
+
+
+    def calculateAvgGradient(self, m):
+        self.J /= m

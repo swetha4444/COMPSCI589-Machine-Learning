@@ -13,7 +13,7 @@ class Layer:
 
     def printA(self):
         print("a"+str(self.l)+": ")
-        self.matrixPrint(self.a)
+        self.matrixPrint(self.getTranspose(self.a))
     
     def printBlame(self):
         print("delta"+str(self.l)+": ")
