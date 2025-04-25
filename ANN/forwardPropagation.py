@@ -41,6 +41,3 @@ class ForwardPropagation:
         for layer in self.layers[:-1]:
             reg_term += np.sum(np.square(layer.weight[:, 1:]))
         self.J += (self.regularization / (2 * self.batchSize)) * reg_term
-
-    def calculateAvgGradient(self):
-        self.J /= self.batchSize
