@@ -2,7 +2,8 @@ from layer import Layer
 import numpy as np
 
 class ForwardPropagation:
-    def __init__(self, layers,batchSize=1):
+    def __init__(self, layers,batchSize=1, regularization=0):
+        self.regularization = regularization
         self.batchSize = batchSize
         self.layers = layers
         self.J = 0
@@ -28,8 +29,15 @@ class ForwardPropagation:
         y = np.array(y)
         # Compute the cost function
         predictions = self.layers[-1].a  # Output layer activations
-        self.J += -np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions)) / len(y)
+        self.J += -np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
+        self.J /= len(y)
+        # Add regularization term
+        reg_term = 0
+        for layer in self.layers[:-1]:
+            reg_term += np.sum(np.square(layer.weight[:, 1:]))
+        self.J += (self.regularization / (2 * len(y))) * reg_term
         return self.J
+
 
 
     def calculateAvgGradient(self):
