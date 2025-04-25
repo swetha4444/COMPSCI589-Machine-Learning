@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from layer import Layer
 from dataProcess import DataPreprocessor
 from forwardPropagation import ForwardPropagation
@@ -7,7 +7,7 @@ from backPropagation import BackPropagation
 import progressbar
 
 class TrainModel:
-    def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon, batchSize=10, regularization=0, stepSize=0.01):
+    def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon=0.01, batchSize=10, regularization=0.25, stepSize=0.1):
         self.stepSize = stepSize
         self.preprocessor = preprocessor
         self.layersSkeleton = layers  # Number of neurons per layer excluding bias
@@ -25,7 +25,6 @@ class TrainModel:
     def initialiseGaussianWeights(self):
         for layer in self.layers:
             layer.weight = np.random.normal(0, 1, layer.weight.shape)
-            layer.printWeight()
         print("Weights initialized successfully")
         
     def buildModel(self):
@@ -42,7 +41,7 @@ class TrainModel:
         self.forwardPropagation = ForwardPropagation(self.layers, batchSize=self.batchSize, regularization=self.regularization)
         self.backPropagation = BackPropagation(self.layers, self.forwardPropagation, batchSize=self.batchSize, regularization=self.regularization, stepSize=self.stepSize)
     
-    def train(self, stoppingCriterion='epochs'):
+    def kFoldTrainTest(self, stoppingCriterion='epochs'):
         self.buildModel()
         for k in range(self.preprocessor.kFold):
             print(f"Training on fold {k + 1}")
@@ -59,10 +58,28 @@ class TrainModel:
                         y_train_batch = y_train[i:i + self.batchSize]
                         self.trainEpoch(X_train_batch, y_train_batch)
                 bar.finish()
+            else:
+                # stop if change in error avg is less than epsilon
+                currErr = 0
+                prevErr = 0
+                while True:
+                    for i in range(0, len(X_train), self.batchSize):
+                        X_train_batch = X_train[i:i + self.batchSize]
+                        y_train_batch = y_train[i:i + self.batchSize]
+                        self.trainEpoch(X_train_batch, y_train_batch)
+                    currErr = self.forwardPropagation.J
+                    print(f"\t\tΔError: {abs(currErr - prevErr)}")
+                    if abs(currErr - prevErr) < self.epsilon:
+                        break
+                    prevErr = currErr
+                   
+            self.testModel(X_test, y_test)
+            print(f"Testing on fold {k + 1} completed")
+            print("--------------------------------------------------------")
 
     def trainEpoch(self, X_train, y_train):
-        X_train = np.array(X_train)
-        y_train = np.array(y_train)
+        X_train = np.array(X_train, dtype=np.float64)  # Ensure X_train is a NumPy array with float64 dtype
+        y_train = np.array(y_train, dtype=np.float64)  # Ensure y_train is a NumPy array with float64 dtype
 
         for i in range(len(X_train)):
             x = X_train[i].reshape(-1, 1)  # Reshape input to (n_features, 1)
@@ -77,27 +94,46 @@ class TrainModel:
         self.backPropagation.calculateAvgGradient()
         self.backPropagation.updateWeights()
 
+    def testModel(self, X_test, y_test):
+        X_test = np.array(X_test, dtype=np.float64)  # Ensure X_test is a NumPy array with float64 dtype
+        y_test = np.array(y_test, dtype=np.float64)  # Ensure y_test is a NumPy array with float64 dtype
+
+        y_pred = []
+        for i in range(len(X_test)):
+            x = X_test[i].reshape(-1, 1)  # Reshape input to (n_features, 1)
+            self.forwardPropagation.forward(x)
+            y_pred.append(self.forwardPropagation.layers[-1].a[0, 0])  # Get the probability of class 1
+        y_pred = np.array(y_pred)
+
+        # Threshold probabilities to get binary predictions
+        y_pred_binary = (y_pred >= 0.5).astype(int)  # Convert probabilities to 0 or 1
+
+        # Calculate metrics
+        accuracy = accuracy_score(y_test, y_pred_binary)
+        precision = precision_score(y_test, y_pred_binary, average='binary')
+        recall = recall_score(y_test, y_pred_binary, average='binary')
+        f1 = f1_score(y_test, y_pred_binary, average='binary')
+
+        print(f"Precision: {precision}")
+        print(f"Recall: {recall}")
+        print(f"Accuracy: {accuracy}")
+        print(f"F1 Score: {f1}")
+        print("Model testing completed successfully")
+
 if __name__ == "__main__":
-    preprocessor = DataPreprocessor(filePath='ANN/datasets/raisin.csv')
+    preprocessor = DataPreprocessor(filePath='ANN/datasets/loan.csv')
     preprocessor.load_data()
     preprocessor.encodeCategorical()
     preprocessor.normalizeData()
     preprocessor.stratifiedKFold()
     preprocessor.printDataDetails()
 
-    # first layer nerusopm = number of attr in dataset
     layers = [preprocessor.data.shape[1] - 1, 5, 1]  
     epsilon = 0.01
-    batchSize = 10
+    batchSize = 20
     regularization = 0.01
+    stepSize = 0.01
 
-    model = TrainModel(preprocessor, layers, epsilon, batchSize, regularization)
-    model.train()
+    model = TrainModel(preprocessor, layers, epsilon, batchSize, regularization, stepSize=stepSize)
+    model.kFoldTrainTest(stoppingCriterion='epsilon')
     print("Training completed.")
-    print("Model weights after training:")
-    for layer in model.layers:
-        print(f"Layer {layer.l} weights:\n{layer.weight}")
-
-
-
-
