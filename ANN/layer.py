@@ -17,22 +17,20 @@ class Layer:
     
     def printBlame(self):
         print("delta"+str(self.l)+": ")
-        self.matrixPrint(self.blame)
+        self.matrixPrint(self.blame.T)
     
     def printWeight(self):
         print("Theta"+str(self.l)+": ")
         self.matrixPrint(self.weight)
 
-    def printGradient(self):
-        print("Gradients of Theta"+str(self.l)+": ")
-        self.matrixPrint(self.gradient)
+    def printGradient(self, instanceGradientTracker={}):
+        for layer in instanceGradientTracker.keys():
+            print(f"Gradient {layer}")
+            self.matrixPrint(instanceGradientTracker[layer])
 
     def matrixPrint(self, matrix):
         for row in matrix:
-            for col in row:
-               print(end="\t")
-               print(col,end ="  ")
-            print("")
+            print(row)
         print()
     
     def getTranspose(self, matrix):

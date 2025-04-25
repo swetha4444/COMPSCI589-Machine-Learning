@@ -45,58 +45,60 @@ layers.append(outputLayer)
 # print("Testing Forward Propagation")
 # print("-------------------------------------")
 
-forwardPropagation = ForwardPropagation(layers=layers)
+forwardPropagation = ForwardPropagation(layers=layers, batchSize=2)
 
 
 x_train = [np.array([[0.13]]), np.array([[0.42]])]
 y_train = [np.array([[0.9]]), np.array([[0.23]])]
 
 
-# for i in range(len(x_train)):
-# 	print(f"Training instance {i+1}")
-# 	x = x_train[i]
-# 	y = y_train[i]
-# 	forwardPropagation.forward(x)
-# 	print(f"x: {x.T}")
-# 	print(f"y: {y.T}")
-# 	print()
-# 	for layer in layers:
-# 		print(f"Layer {layer.l}") 
-# 		layer.printA()
-# 		# layer.printBlame()
-# 		layer.printWeight()
-# 		# layer.printGradient()
-# 	print("Error: ", forwardPropagation.calculateError(y))
-# 	print("--------------------------------------------------")
-# forwardPropagation.calculateAvgGradient(m=len(x_train))
-# print("Overall Error: ", forwardPropagation.J)
+for i in range(len(x_train)):
+    print()
+    print(f"Training instance {i+1}")
+    x = x_train[i]
+    y = y_train[i]
+    forwardPropagation.forward(x)
+    print(f"x: {x.T}")
+    print(f"y: {y.T}")
+    print()
+    for layer in layers:
+        print(f"Layer {layer.l}") 
+        layer.printA()
+        layer.printWeight()
+        forwardPropagation.y = y
+    print("Error: ", forwardPropagation.calculateError(i))
+    print("--------------------------------------------------------")
+forwardPropagation.calculateAvgError()
+print("Overall Error: ", forwardPropagation.J)
 
 print()
 print("-------------------------------------")
 print("Testing Backward Propagation")
 print("-------------------------------------")
+
+forwardPropagation = ForwardPropagation(layers=layers, batchSize=2)
+backPropagation = BackPropagation(layers, batchSize=2)
+
 for i in range(len(x_train)):
-	print(f"Training instance {i+1}")
-	x = x_train[i]
-	y = y_train[i]
-	forwardPropagation.forward(x)
-	backPropagation = BackPropagation(layers, y)
-	backPropagation.calculateBlame()
-	backPropagation.calculateGradient()
-	for layer in layers:
-		print(f"Layer {layer.l}") 
-		# layer.printA()
-		layer.printBlame()
-		# layer.printWeight()
-		layer.printGradient()
+    print(f"Training instance {i+1}")
+    x = x_train[i]
+    y = y_train[i]
+    forwardPropagation.forward(x)
+    backPropagation.y = y
+    backPropagation.calculateBlame()
+    instanceGradientTracker = backPropagation.calculateGradient()
 
+    for i, layer in enumerate(layers):
+        print(f"Layer {layer.l}") 
+        layer.printBlame()
+        layer.printGradient(instanceGradientTracker)
+    print("------------------------------------------------------------------")
 
-
-backPropagation.calculateAvgGradient(2)
+backPropagation.calculateAvgGradient()
 for layer in layers:
-	print(f"Layer {layer.l}")
-	layer.printGradient()
-	print("--------------------------------------------------")
+    print(f"Average Gradient of Layer {layer.l}")
+    layer.matrixPrint(layer.gradient)
+    # print("--------------------------------------------------")
 
 
 

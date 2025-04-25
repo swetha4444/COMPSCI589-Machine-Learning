@@ -54,8 +54,7 @@ layers.append(outputLayer)
 print("-------------------------------------")
 print("Testing Forward Propagation")
 print("-------------------------------------")
-forwardPropagation = ForwardPropagation()
-forwardPropagation.layers = layers
+forwardPropagation = ForwardPropagation(layers=layers,regularization=0.25, batchSize=2)
 x_train = [np.array([[0.32], [0.68]]), np.array([[0.83], [0.02]])]
 y_train = [np.array([[0.75], [0.98]]), np.array([[0.75], [0.28]])]
 for i in range(len(x_train)):
@@ -65,32 +64,43 @@ for i in range(len(x_train)):
     forwardPropagation.forward(x)
     print(f"x: {x.T}")
     print(f"y: {y.T}")
-    print("--------------------------------------------------")
+    print()
     for layer in layers:
-        print(f"Layer {layer.l}")
+        print(f"Layer {layer.l}") 
         layer.printA()
         layer.printWeight()
-        print("--------------------------------------------------")
-    print("Error: ", forwardPropagation.calculateError(y,regularization=0.25))
+        forwardPropagation.y = y
+    print("Error: ", forwardPropagation.calculateError(i))
+    print("--------------------------------------------------")
+forwardPropagation.calculateAvgError()
+print("Overall Error: ", forwardPropagation.J)
 
 
 print("--------------------------------------------------")
 print("Testing Back Propagation")
 print("-----------------------------------------------")
+forwardPropagation = ForwardPropagation(layers=layers, batchSize=2, regularization=0.25)
+backPropagation = BackPropagation(layers, batchSize=2, regularization=0.25)
+
 for i in range(len(x_train)):
     print(f"Training instance {i+1}")
+    instanceGradientTracker = {}
     x = x_train[i]
     y = y_train[i]
     forwardPropagation.forward(x)
-    backPropagation = BackPropagation(layers, y, stepSize=0.01)
+    backPropagation.y = y
     backPropagation.calculateBlame()
-    backPropagation.calculateGradient()
-    # backPropagation.calculateAvgGradient(m=1)
-    # backPropagation.updateWeights()
-    print("--------------------------------------------------")
+    instanceGradientTracker = backPropagation.calculateGradient()
+
     for layer in layers:
-        print(f"Layer {layer.l}")
+        print(f"Layer {layer.l}") 
         layer.printBlame()
-        layer.printWeight()
-        layer.printGradient()
-        print("--------------------------------------------------")
+        layer.printGradient(instanceGradientTracker)
+    print("--------------------------------------------------")
+
+backPropagation.calculateAvgGradient()
+for layer in layers:
+    print(f"Average Gradient of Layer {layer.l}")
+    layer.matrixPrint(layer.gradient)
+    # print("--------------------------------------------------")
+

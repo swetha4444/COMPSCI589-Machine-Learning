@@ -2,11 +2,13 @@ from layer import Layer
 import numpy as np
 
 class ForwardPropagation:
-    def __init__(self, layers,batchSize=1, regularization=0):
+    def __init__(self, layers, y=None, batchSize=1, regularization=0):
         self.regularization = regularization
         self.batchSize = batchSize
         self.layers = layers
         self.J = 0
+        self.y = y
+        self.instanceErrorTracking= {}
 
     def g(self, z):
         return 1 / (1 + np.exp(-z))
@@ -25,20 +27,20 @@ class ForwardPropagation:
             layer.printA()
             layer.printWeight()
 
-    def calculateAvgError(self, y):
-        y = np.array(y)
-        # Compute the cost function
-        predictions = self.layers[-1].a  # Output layer activations
-        self.J += -np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
-        self.J /= len(y)
-        # Add regularization term
+    def calculateError(self,instanceID):
+        y = np.array(self.y)
+        predictions = self.layers[-1].a 
+        instanceError = -np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
+        self.instanceErrorTracking[instanceID] = instanceError
+        self.J += instanceError
+        return instanceError
+    
+    def calculateAvgError(self):
+        self.J /= self.batchSize
         reg_term = 0
         for layer in self.layers[:-1]:
             reg_term += np.sum(np.square(layer.weight[:, 1:]))
-        self.J += (self.regularization / (2 * len(y))) * reg_term
-        return self.J
-
-
+        self.J += (self.regularization / (2 * self.batchSize)) * reg_term
 
     def calculateAvgGradient(self):
         self.J /= self.batchSize

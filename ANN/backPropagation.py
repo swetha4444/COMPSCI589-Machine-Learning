@@ -2,7 +2,8 @@ import numpy as np
 from layer import Layer
 
 class BackPropagation:
-    def __init__(self, layers, y, stepSize=0.01, regularization=0):
+    def __init__(self, layers, y=None, stepSize=0.01, regularization=0, batchSize=1):
+        self.batchSize = batchSize
         self.stepSize = stepSize
         self.layers = layers
         self.y = y
@@ -19,13 +20,17 @@ class BackPropagation:
         self.layers[-1].blame = self.layers[-1].a - self.y
 
     def calculateGradient(self):
+        listInstanceGradient = {}
         for i in range(len(self.layers)-2, -1, -1):
-            self.layers[i].gradient = np.dot(self.layers[i+1].blame, self.layers[i].a.T)
+            layerGradient = np.dot(self.layers[i+1].blame, self.layers[i].a.T)
+            listInstanceGradient[self.layers[i].l]  = layerGradient
+            self.layers[i].gradient += layerGradient
+        return listInstanceGradient
             
-    def calculateAvgGradient(self, m):
+    def calculateAvgGradient(self):
         for i in range(len(self.layers) - 2, -1, -1):
-            self.layers[i].gradient /= m
-            self.layers[i].gradient[:, 1:] += (self.regularization / m) * self.layers[i].weight[:, 1:]  # Exclude bias
+            self.layers[i].gradient /= self.batchSize
+            self.layers[i].gradient[:, 1:] += (self.regularization / self.batchSize) * self.layers[i].weight[:, 1:]  # Exclude bias
 
     def updateWeights(self):
         for i in range(len(self.layers)-2, -1, -1):
