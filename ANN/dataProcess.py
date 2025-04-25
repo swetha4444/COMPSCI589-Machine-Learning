@@ -26,7 +26,6 @@ class DataPreprocessor:
         np.random.seed(self.randomSeed)
         self.data = self.data.sample(frac=1, random_state=self.randomSeed).reset_index(drop=True)
         labels = self.data[self.labelColumn].values
-
         uniqueLabels = np.unique(labels)
         self.foldedDataIndex = [[] for _ in range(self.kFold)]
         for label in uniqueLabels:
@@ -35,10 +34,22 @@ class DataPreprocessor:
             foldSize = len(labelData) // self.kFold
             for i in range(self.kFold):
                 start = i * foldSize
-                end = (i + 1) * foldSize if i != self.kFold - 1 else len(labelData)  # last fold gets remainder
+                end = (i + 1) * foldSize if i != self.kFold - 1 else len(labelData)
                 self.foldedDataIndex[i].extend(labelDataIndices[start:end])
         return self.foldedDataIndex
     
+
+    def getTrainTestSplit(self, k):
+        # combine i index as test and others as train
+        trainFolds = np.concatenate([np.array(self.foldedDataIndex[i]) for i in range(self.kFold) if i != k])
+        testFold = np.array(self.foldedDataIndex[k])
+        #'label' class is y and rest is x
+        X_train = self.data.iloc[trainFolds].drop(columns=[self.labelColumn]).values  # Features
+        y_train = self.data.iloc[trainFolds][self.labelColumn].values  # Labels
+        X_test = self.data.iloc[testFold].drop(columns=[self.labelColumn]).values  # Features
+        y_test = self.data.iloc[testFold][self.labelColumn].values  # Labels
+        return X_train, y_train, X_test, y_test
+
     def printDataDetails(self):
         print(f"Data shape: {self.data.shape}")
         print(f"Label distribution:\n{self.data[self.labelColumn].value_counts()}")
