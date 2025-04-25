@@ -2,7 +2,8 @@ from layer import Layer
 import numpy as np
 
 class ForwardPropagation:
-    def __init__(self, layers):
+    def __init__(self, layers,batchSize=1):
+        self.batchSize = batchSize
         self.layers = layers
         self.J = 0
 
@@ -23,7 +24,7 @@ class ForwardPropagation:
             layer.printA()
             layer.printWeight()
 
-    def calculateError(self, y):
+    def calculateAvgError(self, y):
         y = np.array(y)
         # Compute the cost function
         predictions = self.layers[-1].a  # Output layer activations
@@ -31,5 +32,5 @@ class ForwardPropagation:
         return self.J
 
 
-    def calculateAvgGradient(self, m):
-        self.J /= m
+    def calculateAvgGradient(self):
+        self.J /= self.batchSize
