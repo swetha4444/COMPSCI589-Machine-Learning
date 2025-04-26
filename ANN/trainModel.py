@@ -48,9 +48,8 @@ class TrainModel:
         kRecall = []
         kF1Score = []
         self.buildModel()
-        print(self.preprocessor.kFold)
         for k in range(self.preprocessor.kFold):
-            print(f"Training on fold {k + 1}")
+            print(f"\nTraining on fold {k + 1}")
             X_train, y_train, X_test, y_test = self.preprocessor.getTrainTestSplit(k)
             if stoppingCriterion == 'epochs':
                 # Print progress bar for epochs

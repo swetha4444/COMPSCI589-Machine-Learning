@@ -63,6 +63,7 @@ class ModelSampler:
 
             # Create and train the model
             model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=0.5)
+            print("\n\n")
             print(f"Model with layers {l}, regularization {regularization}, batch size {batchSize}, step size {stepSize} created successfully")
 
             # Train the model using k-fold cross-validation and get averaged metrics
