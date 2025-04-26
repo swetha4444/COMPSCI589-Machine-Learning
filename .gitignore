@@ -6,3 +6,4 @@ Random Forest/.DS_Store
 # Random Forest/main.py
 
 *.cpython-313.pyc
+ANN/visualizeArchitecture.py
