@@ -16,21 +16,21 @@ def confusion_matrix(test, pred, labels):
         cm[labels.index(actual)][labels.index(predicted)] += 1
     return cm
 
-def calculatePrecision(test, pred, labels,pos_class_index=0):
+def calculatePrecision(test, pred, labels,pos_class_index=1):
     cm = confusion_matrix(test, pred, labels)
     tp = cm[pos_class_index, pos_class_index]
     fp = np.sum(cm[:, pos_class_index]) - tp 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     return round(precision * 100, 2)
 
-def calculateRecall(test, pred, labels,pos_class_index=0):
+def calculateRecall(test, pred, labels,pos_class_index=1):
     cm = confusion_matrix(test, pred, labels)
     tp = cm[pos_class_index, pos_class_index]
     fn = np.sum(cm[pos_class_index, :]) - tp
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
     return round(recall * 100, 2)
 
-def calculateF1Score(test, pred, labels,pos_class_index=0):
+def calculateF1Score(test, pred, labels,pos_class_index=1):
     precision = calculatePrecision(test, pred, labels,pos_class_index)
     recall = calculateRecall(test, pred, labels,pos_class_index)
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0

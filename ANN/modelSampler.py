@@ -21,16 +21,15 @@ from trainModel import TrainModel
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
+LOAN_LAYERS_SKELETON = [[1], [5,1], [12,1],[5, 10, 1], [14,5,8,1]]
+TITANIC_LAYERS_SKELETON = [[1], [5,1],[3, 1],[3, 2, 1]]
+RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 12, 8, 6, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
     EPSILON = 0.01
     REGULARIZATION_VALUES = [0.01,0.025]
     STEP_SIZE_VALUES = [0.01, 0.05]
     BATCH_SIZE_VALUES = [5, 10]
-    LAYERS_SKELETON = [[1], [5,1],[3, 1],[3, 2, 1]]
-    # WDBC: [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
-    # LOAN: [[1], [5,1], [12,1],[5, 10, 1], [14,5,8,1]]
-    # TITANIC: [[1], [5,1],[3, 1],[3, 2, 1]]
-    # RAISIN: [[1], [5,1],[6,5, 1],[5, 6, 5, 1]]
     K_FOLD = 5
     
     def __init__(self, filePath):
@@ -48,7 +47,7 @@ class ModelSampler:
         self.precision = []
         self.recall = []
 
-    def sampleModels(self, regularization=0.01, stepSize=0.01, batchSize=10):
+    def sampleModels(self, layerSkeleton, regularization=0.01, stepSize=0.01, batchSize=10, thresholdValue=0.5, stoppingCriterionCategory='epochs'):
         # Store all the models and their metrics to plot
         accuracy = []
         f1Score = []
@@ -56,18 +55,18 @@ class ModelSampler:
         recall = []
         models = []
 
-        for layers in self.LAYERS_SKELETON:
+        for layers in layerSkeleton:
             # Add input layer size to the beginning of the architecture
             l = layers.copy()
             l.insert(0, self.preprocessor.data.shape[1] - 1)
 
             # Create and train the model
-            model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=0.5)
+            model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=thresholdValue)
             print("\n\n")
             print(f"Model with layers {l}, regularization {regularization}, batch size {batchSize}, step size {stepSize} created successfully")
 
             # Train the model using k-fold cross-validation and get averaged metrics
-            acc, pre, rec, f1 = model.kFoldTrainTest()
+            acc, pre, rec, f1 = model.kFoldTrainTest(stoppingCriterion=stoppingCriterionCategory)
 
             # Append metrics and model to their respective lists
             accuracy.append(acc)
@@ -128,7 +127,6 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
         plt.annotate(f"{pre:.2f}", (i, precision[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
         plt.annotate(f"{rec:.2f}", (i, recall[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
 
-    # Customize the plot
     plt.xlabel('Model Architecture', fontsize=12)
     plt.ylabel('Metric Value', fontsize=12)
     plt.title(title, fontsize=14)
@@ -136,13 +134,11 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     plt.xticks(ticks=range(len(model_architectures)), labels=model_architectures, rotation=45, ha='right', fontsize=10)
     plt.legend(fontsize=10, loc='upper left')
     plt.tight_layout()
-
-    # Show the plot
     plt.show()
 
 if __name__ == "__main__":
-    modelSampler = ModelSampler(filePath='ANN/datasets/titanic.csv')
-    modelSampler.sampleModels(regularization=0.01, stepSize=0.01, batchSize=10)
+    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
+    modelSampler.sampleModels(layerSkeleton = RAISIN_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=15,stoppingCriterionCategory='epochs')
     print("Model sampling completed successfully")
 
 
