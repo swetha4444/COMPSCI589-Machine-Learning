@@ -66,6 +66,7 @@ from layer import Layer
 from forwardPropagation import ForwardPropagation
 
 def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regularizationValue=0):
+    print("Epsilon: ", epsilon)
     layers[weightIndex[0]-1].weight[weightIndex[1]][weightIndex[2]] += epsilon
     forwardPropagation1 = ForwardPropagation(layers=layers, batchSize=2, regularization=regularizationValue)
     for i in range(len(x)):
@@ -90,7 +91,6 @@ def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regular
     err2 = forwardPropagation2.J
     print(f"Error with theta - epsilon: {err2}")
     print("Gradient error derivative: ", (err1 - err2) / (2 * epsilon))
-    print()
     return (err1 - err2) / (2 * epsilon)
 
 def actualErrorDerivative(layers, x, y, weightIndex=(1,1,2), regularizationValue=0):
@@ -107,67 +107,62 @@ def actualErrorDerivative(layers, x, y, weightIndex=(1,1,2), regularizationValue
     print("Value of Gradient from backpropagation: ", layers[weightIndex[0]-1].gradient[weightIndex[1]][weightIndex[2]])
     return layers[weightIndex[0]-1].gradient[weightIndex[1]][weightIndex[2]]
 
+def initTest1():
+    layers = []
+    inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
+    inputLayer.weight = np.array([[0.4, 0.1], [0.3, 0.2]])
+    layers.append(inputLayer)
+    hiddenLayer = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
+    hiddenLayer.weight = np.array([[0.7, 0.5, 0.6]])
+    layers.append(hiddenLayer)
+    outputLayer = Layer(neuronsPerLayer[2], 0, l=3)
+    layers.append(outputLayer)
+    return layers
+
+def initTest2():
+    layers = []
+    inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
+    inputLayer.weight = np.array([[0.42, 0.15, 0.4], [0.72, 0.1, 0.54], [0.01, 0.19, 0.42], [0.3, 0.35, 0.68]])
+    layers.append(inputLayer)
+    hiddenLayer1 = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
+    hiddenLayer1.weight = np.array([[0.21, 0.67, 0.14, 0.96, 0.87], [0.87, 0.42, 0.2, 0.32, 0.89], [0.03, 0.56, 0.8, 0.69, 0.09]])
+    layers.append(hiddenLayer1)
+    hiddenLayer2 = Layer(neuronsPerLayer[2], neuronsPerLayer[3], l=3)
+    hiddenLayer2.weight = np.array([[0.04, 0.87, 0.42, 0.53], [0.17, 0.1, 0.95, 0.69]])
+    layers.append(hiddenLayer2)
+    outputLayer = Layer(neuronsPerLayer[3], 0, l=4)
+    layers.append(outputLayer)
+    return layers
+
 
 if __name__ == "__main__":
-    test1 = False
+    test1 = True
     test2 = True
     if test1:
-        print("Test 1")
+        print("\n------------------")
+        print("Backpropagation 1")
+        print("------------------")
         neuronsPerLayer = [1, 2, 1]
         x_train = [np.array([[0.13]]), np.array([[0.42]])]
         y_train = [np.array([[0.9]]), np.array([[0.23]])]
 
-        layers = []
-        inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
-        inputLayer.weight = np.array([[0.4, 0.1], [0.3, 0.2]])
-        layers.append(inputLayer)
-        hiddenLayer = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
-        hiddenLayer.weight = np.array([[0.7, 0.5, 0.6]])
-        layers.append(hiddenLayer)
-        outputLayer = Layer(neuronsPerLayer[2], 0, l=3)
-        layers.append(outputLayer)
+        layers = initTest1()
+        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.00001)
+        layers = initTest1()
         errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.1)
-
-        layers = []
-        inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
-        inputLayer.weight = np.array([[0.4, 0.1], [0.3, 0.2]])
-        layers.append(inputLayer)
-        hiddenLayer = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
-        hiddenLayer.weight = np.array([[0.7, 0.5, 0.6]])
-        layers.append(hiddenLayer)
-        outputLayer = Layer(neuronsPerLayer[2], 0, l=3)
-        layers.append(outputLayer)
+        layers = initTest1()
         actualErrorDerivative(layers, x_train, y_train, weightIndex=(1,1,1))
     if test2:
-        print("Test 2")
+        print("\n------------------")
+        print("Backpropagation 2")
+        print("------------------")
         x_train = [np.array([[0.32], [0.68]]), np.array([[0.83], [0.02]])]
         y_train = [np.array([[0.75], [0.98]]), np.array([[0.75], [0.28]])]
         neuronsPerLayer = [2, 4, 3, 2]
 
-        layers = []
-        inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
-        inputLayer.weight = np.array([[0.42, 0.15, 0.4], [0.72, 0.1, 0.54], [0.01, 0.19, 0.42], [0.3, 0.35, 0.68]])
-        layers.append(inputLayer)
-        hiddenLayer1 = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
-        hiddenLayer1.weight = np.array([[0.21, 0.67, 0.14, 0.96, 0.87], [0.87, 0.42, 0.2, 0.32, 0.89], [0.03, 0.56, 0.8, 0.69, 0.09]])
-        layers.append(hiddenLayer1)
-        hiddenLayer2 = Layer(neuronsPerLayer[2], neuronsPerLayer[3], l=3)
-        hiddenLayer2.weight = np.array([[0.04, 0.87, 0.42, 0.53], [0.17, 0.1, 0.95, 0.69]])
-        layers.append(hiddenLayer2)
-        outputLayer = Layer(neuronsPerLayer[3], 0, l=4)
-        layers.append(outputLayer)
-        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=1,regularizationValue=0.25)
-
-        layers = []
-        inputLayer = Layer(neuronsPerLayer[0], neuronsPerLayer[1], l=1)
-        inputLayer.weight = np.array([[0.42, 0.15, 0.4], [0.72, 0.1, 0.54], [0.01, 0.19, 0.42], [0.3, 0.35, 0.68]])
-        layers.append(inputLayer)
-        hiddenLayer1 = Layer(neuronsPerLayer[1], neuronsPerLayer[2], l=2)
-        hiddenLayer1.weight = np.array([[0.21, 0.67, 0.14, 0.96, 0.87], [0.87, 0.42, 0.2, 0.32, 0.89], [0.03, 0.56, 0.8, 0.69, 0.09]])
-        layers.append(hiddenLayer1)
-        hiddenLayer2 = Layer(neuronsPerLayer[2], neuronsPerLayer[3], l=3)
-        hiddenLayer2.weight = np.array([[0.04, 0.87, 0.42, 0.53], [0.17, 0.1, 0.95, 0.69]])
-        layers.append(hiddenLayer2)
-        outputLayer = Layer(neuronsPerLayer[3], 0, l=4)
-        layers.append(outputLayer)
+        layers = initTest2()
+        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.00001,regularizationValue=0.25)
+        layers = initTest2()
+        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.1,regularizationValue=0.25)
+        layers = initTest2()
         actualErrorDerivative(layers, x_train, y_train, weightIndex=(1,1,1),regularizationValue=0.25)
