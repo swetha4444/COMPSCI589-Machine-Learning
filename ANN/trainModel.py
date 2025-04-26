@@ -104,15 +104,12 @@ class TrainModel:
             self.forwardPropagation.forward(x)
             y_pred.append(self.forwardPropagation.layers[-1].a[0, 0])  # Get the probability of class 1
         y_pred = np.array(y_pred)
+        y_pred_binary = (y_pred >= 0.5).astype(int)  # Lower threshold to 0.5
 
-        # Threshold probabilities to get binary predictions
-        y_pred_binary = (y_pred >= 0.5).astype(int)  # Convert probabilities to 0 or 1
-
-        # Calculate metrics
         accuracy = accuracy_score(y_test, y_pred_binary)
-        precision = precision_score(y_test, y_pred_binary, average='binary')
-        recall = recall_score(y_test, y_pred_binary, average='binary')
-        f1 = f1_score(y_test, y_pred_binary, average='binary')
+        precision = precision_score(y_test, y_pred_binary, average='binary', zero_division=0)
+        recall = recall_score(y_test, y_pred_binary, average='binary', zero_division=0)
+        f1 = f1_score(y_test, y_pred_binary, average='binary', zero_division=0)
 
         print(f"Precision: {precision}")
         print(f"Recall: {recall}")
@@ -121,7 +118,7 @@ class TrainModel:
         print("Model testing completed successfully")
 
 if __name__ == "__main__":
-    preprocessor = DataPreprocessor(filePath='ANN/datasets/loan.csv')
+    preprocessor = DataPreprocessor(filePath='ANN/datasets/raisin.csv')
     preprocessor.load_data()
     preprocessor.encodeCategorical()
     preprocessor.normalizeData()
@@ -130,10 +127,10 @@ if __name__ == "__main__":
 
     layers = [preprocessor.data.shape[1] - 1, 5, 1]  
     epsilon = 0.01
-    batchSize = 20
+    batchSize = 10
     regularization = 0.01
     stepSize = 0.01
 
     model = TrainModel(preprocessor, layers, epsilon, batchSize, regularization, stepSize=stepSize)
-    model.kFoldTrainTest(stoppingCriterion='epsilon')
+    model.kFoldTrainTest(stoppingCriterion='epochs')
     print("Training completed.")
