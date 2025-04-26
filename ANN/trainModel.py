@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from calculateAcuracy import calculateAccuracy, calculatePrecision, calculateRecall, calculateF1Score
 from layer import Layer
 from dataProcess import DataPreprocessor
 from forwardPropagation import ForwardPropagation
@@ -106,10 +106,10 @@ class TrainModel:
         y_pred = np.array(y_pred)
         y_pred_binary = (y_pred >= 0.5).astype(int)  # Lower threshold to 0.5
 
-        accuracy = accuracy_score(y_test, y_pred_binary)
-        precision = precision_score(y_test, y_pred_binary, average='binary', zero_division=0)
-        recall = recall_score(y_test, y_pred_binary, average='binary', zero_division=0)
-        f1 = f1_score(y_test, y_pred_binary, average='binary', zero_division=0)
+        accuracy = calculateAccuracy(y_test, y_pred_binary)
+        precision = calculatePrecision(y_test, y_pred_binary,labels=[0, 1])
+        recall = calculateRecall(y_test, y_pred_binary,labels=[0, 1])
+        f1 = calculateF1Score(y_test, y_pred_binary,labels=[0, 1])
 
         print(f"Precision: {precision}")
         print(f"Recall: {recall}")
