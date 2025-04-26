@@ -105,8 +105,6 @@ class TrainModel:
             y_pred.append(self.forwardPropagation.layers[-1].a[0, 0])  # Get the probability of class 1
         y_pred = np.array(y_pred)
         y_pred_binary = (y_pred >= 0.5).astype(int)  # Lower threshold to 0.5
-        print(f"Predictions: {y_pred_binary}")
-        print(f"Actual: {y_test}")
         accuracy = calculateAccuracy(y_test, y_pred_binary)
         precision = calculatePrecision(y_test, y_pred_binary,labels=[0, 1])
         recall = calculateRecall(y_test, y_pred_binary,labels=[0, 1])
