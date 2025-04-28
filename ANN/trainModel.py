@@ -5,6 +5,8 @@ from dataProcess import DataPreprocessor
 from forwardPropagation import ForwardPropagation
 from backPropagation import BackPropagation
 import progressbar
+import alive_progress
+from alive_progress import alive_bar
 
 class TrainModel:
     def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon=0.01,
@@ -70,24 +72,25 @@ class TrainModel:
             foldEpochF1Score = []
 
             if stoppingCriterion == 'epochs':
-                # Print progress bar for epochs
-                bar = progressbar.ProgressBar(maxval=self.epoch, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-                bar.start()
-                for epoch in range(self.epoch):
-                    bar.update(epoch + 1)
-                    # Train on batches
-                    for i in range(0, len(X_train), self.batchSize):
-                        X_train_batch = X_train[i:i + self.batchSize]
-                        y_train_batch = y_train[i:i + self.batchSize]
-                        self.trainEpoch(X_train_batch, y_train_batch)
+                # Print progress bar for epochs, not percentage but epoch number on the bar
+                # use alive bar pip install alive-progress
+                with alive_bar(self.epoch, title="Training Progress", bar='classic2', spinner='waves',) as bar:
+                    for epoch in range(self.epoch):
+                        # bar.update(epoch + 1)
+                        # Train on batches
+                        for i in range(0, len(X_train), self.batchSize):
+                            X_train_batch = X_train[i:i + self.batchSize]
+                            y_train_batch = y_train[i:i + self.batchSize]
+                            self.trainEpoch(X_train_batch, y_train_batch)
 
-                    # Evaluate on the test set for this epoch
-                    acc, pre, rec, f1 = self.testModel(X_test, y_test)
-                    foldEpochAccuracy.append(acc)
-                    foldEpochPrecision.append(pre)
-                    foldEpochRecall.append(rec)
-                    foldEpochF1Score.append(f1)
-                bar.finish()
+                        # Evaluate on the test set for this epoch
+                        acc, pre, rec, f1 = self.testModel(X_test, y_test)
+                        foldEpochAccuracy.append(acc)
+                        foldEpochPrecision.append(pre)
+                        foldEpochRecall.append(rec)
+                        foldEpochF1Score.append(f1)
+                        bar()
+                    # bar.finish()
 
             else:
                 # Stop if change in error avg is less than epsilon

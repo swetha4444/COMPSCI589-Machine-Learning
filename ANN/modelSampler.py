@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
+WDBC_LAYERS_SKELETON = [[10, 16, 8, 4, 1], [1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
 LOAN_LAYERS_SKELETON = [[1], [5,1], [12,1],[5, 10, 1], [10,5,8,1]]
 TITANIC_LAYERS_SKELETON = [[1], [5,1],[3, 1],[3, 2, 1]]
-RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 12, 8, 6, 1],[10, 8, 6, 8, 1]]
+RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 16, 8, 4, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
     EPSILON = 0.01
     REGULARIZATION_VALUES = [0.01,0.025]
@@ -173,7 +173,7 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     plt.show()
 
 if __name__ == "__main__":
-    modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
+    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
     modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='epochs')
     print("Model sampling completed successfully")
 
