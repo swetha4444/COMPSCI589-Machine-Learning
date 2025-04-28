@@ -7,7 +7,9 @@ from backPropagation import BackPropagation
 import progressbar
 
 class TrainModel:
-    def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon=0.01, batchSize=10, regularization=0.25, stepSize=0.1, threshold=0.5):
+    def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon=0.01,
+                  batchSize=10, regularization=0.25, stepSize=0.1, threshold=0.5,
+                  epoch=100, patience=10):
         self.threshold = threshold
         self.stepSize = stepSize
         self.preprocessor = preprocessor
@@ -15,7 +17,9 @@ class TrainModel:
         self.epsilon = epsilon
         self.batchSize = batchSize  # Initialize batchSize before calling getEpoch
         self.regularization = regularization
-        self.epoch = self.getEpoch()  # Now call getEpoch after batchSize is initialized
+        self.epoch = epoch
+        # self.getEpoch()  # Now call getEpoch after batchSize is initialized
+        self.patience = patience
 
     def getEpoch(self):
         # Calculate the total length of the first k-1 folds
@@ -48,23 +52,45 @@ class TrainModel:
         kRecall = []
         kF1Score = []
         self.buildModel()
+
+        # Initialize lists to store metrics for each epoch across all folds
+        epochAccuracies = []
+        epochPrecisions = []
+        epochRecalls = []
+        epochF1Scores = []
+
         for k in range(self.preprocessor.kFold):
             print(f"\nTraining on fold {k + 1}")
             X_train, y_train, X_test, y_test = self.preprocessor.getTrainTestSplit(k)
+
+            # Initialize metrics for this fold
+            foldEpochAccuracy = []
+            foldEpochPrecision = []
+            foldEpochRecall = []
+            foldEpochF1Score = []
+
             if stoppingCriterion == 'epochs':
                 # Print progress bar for epochs
                 bar = progressbar.ProgressBar(maxval=self.epoch, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
                 bar.start()
                 for epoch in range(self.epoch):
                     bar.update(epoch + 1)
-                    # Process data in batches
+                    # Train on batches
                     for i in range(0, len(X_train), self.batchSize):
                         X_train_batch = X_train[i:i + self.batchSize]
                         y_train_batch = y_train[i:i + self.batchSize]
                         self.trainEpoch(X_train_batch, y_train_batch)
+
+                    # Evaluate on the test set for this epoch
+                    acc, pre, rec, f1 = self.testModel(X_test, y_test)
+                    foldEpochAccuracy.append(acc)
+                    foldEpochPrecision.append(pre)
+                    foldEpochRecall.append(rec)
+                    foldEpochF1Score.append(f1)
                 bar.finish()
+
             else:
-                # stop if change in error avg is less than epsilon
+                # Stop if change in error avg is less than epsilon
                 currErr = 0
                 prevErr = 0
                 while True:
@@ -77,15 +103,40 @@ class TrainModel:
                     if abs(currErr - prevErr) < self.epsilon:
                         break
                     prevErr = currErr
-                   
-            acc,pre,rec,f1 = self.testModel(X_test, y_test)
-            kAccuracy.append(acc)
-            kPrecision.append(pre)
-            kRecall.append(rec)
-            kF1Score.append(f1)
+
+            # Append fold metrics to the epoch-level lists
+            if len(epochAccuracies) == 0:
+                epochAccuracies = np.array(foldEpochAccuracy)
+                epochPrecisions = np.array(foldEpochPrecision)
+                epochRecalls = np.array(foldEpochRecall)
+                epochF1Scores = np.array(foldEpochF1Score)
+            else:
+                epochAccuracies += np.array(foldEpochAccuracy)
+                epochPrecisions += np.array(foldEpochPrecision)
+                epochRecalls += np.array(foldEpochRecall)
+                epochF1Scores += np.array(foldEpochF1Score)
+
             print(f"Testing on fold {k + 1} completed")
             print("--------------------------------------------------------")
-        return np.mean(kAccuracy), np.mean(kPrecision), np.mean(kRecall), np.mean(kF1Score)
+
+        # Take the average of metrics across all folds for each epoch
+        epochAccuracies /= self.preprocessor.kFold
+        epochPrecisions /= self.preprocessor.kFold
+        epochRecalls /= self.preprocessor.kFold
+        epochF1Scores /= self.preprocessor.kFold
+
+        # Append the averaged metrics to kAccuracy, kPrecision, etc.
+        kAccuracy.extend(epochAccuracies)
+        kPrecision.extend(epochPrecisions)
+        kRecall.extend(epochRecalls)
+        kF1Score.extend(epochF1Scores)
+
+        # Print final metrics
+        print("\nFinal Metrics Across All Epochs:")
+        for epoch, (acc, pre, rec, f1) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores), start=1):
+            print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%")
+
+        return kAccuracy, kPrecision, kRecall, kF1Score
 
     def trainEpoch(self, X_train, y_train):
         X_train = np.array(X_train, dtype=np.float64)  # Ensure X_train is a NumPy array with float64 dtype
@@ -121,11 +172,11 @@ class TrainModel:
         recall = calculateRecall(y_test, y_pred_binary,labels=[0, 1])
         f1 = calculateF1Score(y_test, y_pred_binary,labels=[0, 1])
 
-        print(f"Precision: {precision}")
-        print(f"Recall: {recall}")
-        print(f"Accuracy: {accuracy}")
-        print(f"F1 Score: {f1}")
-        print("Model testing completed successfully")
+        # print(f"Precision: {precision}")
+        # print(f"Recall: {recall}")
+        # print(f"Accuracy: {accuracy}")
+        # print(f"F1 Score: {f1}")
+        # print("Model testing completed successfully")
         return accuracy, precision, recall, f1
 
 if __name__ == "__main__":

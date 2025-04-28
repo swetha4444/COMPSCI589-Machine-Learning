@@ -21,8 +21,9 @@ from trainModel import TrainModel
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
-LOAN_LAYERS_SKELETON = [[1], [5,1], [12,1],[5, 10, 1], [14,5,8,1]]
+LOAN_LAYERS_SKELETON = [[1], [5,1], [12,1],[5, 10, 1], [10,5,8,1]]
 TITANIC_LAYERS_SKELETON = [[1], [5,1],[3, 1],[3, 2, 1]]
 RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 12, 8, 6, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
@@ -65,26 +66,61 @@ class ModelSampler:
             print("\n\n")
             print(f"Model with layers {l}, regularization {regularization}, batch size {batchSize}, step size {stepSize} created successfully")
 
-            # Train the model using k-fold cross-validation and get averaged metrics
-            acc, pre, rec, f1 = model.kFoldTrainTest(stoppingCriterion=stoppingCriterionCategory)
+            # Train the model using k-fold cross-validation and get Learbing curve (mtric vs epoch list)
+            accLC, preLC, recLC, f1LC = model.kFoldTrainTest(stoppingCriterion=stoppingCriterionCategory)
 
             # Append metrics and model to their respective lists
-            accuracy.append(acc)
-            precision.append(pre)
-            recall.append(rec)
-            f1Score.append(f1)
+            accuracy.append(accLC)
+            f1Score.append(f1LC)
+            precision.append(preLC)
+            recall.append(recLC)
             models.append(model)
 
+            plotLearningCurve(accLC, preLC, recLC, f1LC, model, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
+
         # Plot the metrics
-        plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
+        # plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
         print("Model sampling completed successfully")
 
 
-def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance"):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import numpy as np
+def plotLearningCurve(accuracy, f1Score, precision, recall, model, title="Model Performance"):
+    # Convert models to string representations of their architectures
+    model_architectures = [f"Layers: {model.layersSkeleton}"]
 
+    # Set Seaborn style and color palette
+    sns.set(style="whitegrid")
+    palette = sns.color_palette("Set2")
+
+    # Create the plot
+    plt.figure(figsize=(14, 8))
+
+    # Generate epoch numbers for the x-axis
+    epochs = list(range(1, len(accuracy) + 1))
+
+    # Plot each metric with error bars (mean ± std deviation)
+    for i, (metric_name, values) in enumerate(zip(["Accuracy", "F1 Score", "Precision", "Recall"], [accuracy, f1Score, precision, recall])):
+        plt.errorbar(
+            epochs,
+            values,
+            # fmt='o',
+            label=metric_name,
+            color=palette[i],
+            # capsize=5,
+            # capthick=2,
+            # markersize=8,
+            linestyle='-'
+        )
+
+    plt.xlabel('Epochs', fontsize=12)
+    plt.ylabel('Metric Value', fontsize=12)
+    plt.title(title, fontsize=14)
+    # plt.ylim(0,100)
+    plt.xticks(ticks=range(len(model_architectures)), labels=model_architectures, rotation=45, ha='right', fontsize=10)
+    plt.legend(fontsize=10, loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance"):
     # Convert models to string representations of their architectures
     model_architectures = [f"Layers: {model.layersSkeleton}" for model in models]
 
@@ -137,8 +173,8 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     plt.show()
 
 if __name__ == "__main__":
-    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
-    modelSampler.sampleModels(layerSkeleton = RAISIN_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=15,stoppingCriterionCategory='epochs')
+    modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
+    modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='epochs')
     print("Model sampling completed successfully")
 
 
