@@ -94,18 +94,26 @@ class TrainModel:
 
             else:
                 # Stop if change in error avg is less than epsilon
-                currErr = 0
-                prevErr = 0
-                while True:
-                    for i in range(0, len(X_train), self.batchSize):
-                        X_train_batch = X_train[i:i + self.batchSize]
-                        y_train_batch = y_train[i:i + self.batchSize]
-                        self.trainEpoch(X_train_batch, y_train_batch)
-                    currErr = self.forwardPropagation.J
-                    print(f"\t\tΔError: {abs(currErr - prevErr)}")
-                    if abs(currErr - prevErr) < self.epsilon:
-                        break
-                    prevErr = currErr
+                for epoch in range(self.epoch):
+                    currErr = 0
+                    prevErr = 0
+                    while True:
+                        for i in range(0, len(X_train), self.batchSize):
+                            X_train_batch = X_train[i:i + self.batchSize]
+                            y_train_batch = y_train[i:i + self.batchSize]
+                            self.trainEpoch(X_train_batch, y_train_batch)
+                        currErr = self.forwardPropagation.J
+                        # print(f"\t\tΔError: {abs(currErr - prevErr)}")
+                        if abs(currErr - prevErr) < self.epsilon:
+                            break
+                        prevErr = currErr
+                    acc, pre, rec, f1 = self.testModel(X_test, y_test)
+                    foldEpochAccuracy.append(acc)
+                    foldEpochPrecision.append(pre)
+                    foldEpochRecall.append(rec)
+                    foldEpochF1Score.append(f1)
+                    # bar()
+                    
 
             # Append fold metrics to the epoch-level lists
             if len(epochAccuracies) == 0:

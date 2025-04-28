@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-WDBC_LAYERS_SKELETON = [[10, 16, 8, 4, 1], [1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
-LOAN_LAYERS_SKELETON = [[1], [5,1], [12,1],[5, 10, 1], [10,5,8,1]]
-TITANIC_LAYERS_SKELETON = [[1], [5,1],[3, 1],[3, 2, 1]]
+WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
+LOAN_LAYERS_SKELETON = [[5,1], [12,1],[5, 10, 1], [10,5,8,1]]
+TITANIC_LAYERS_SKELETON = [[20,1], [8,1],[16,4,8,1],[8,4,2,1]]
 RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 16, 8, 4, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
     EPSILON = 0.01
@@ -32,6 +32,7 @@ class ModelSampler:
     STEP_SIZE_VALUES = [0.01, 0.05]
     BATCH_SIZE_VALUES = [5, 10]
     K_FOLD = 5
+    EPOCHS = 100
     
     def __init__(self, filePath):
         self.filePath = filePath
@@ -62,7 +63,7 @@ class ModelSampler:
             l.insert(0, self.preprocessor.data.shape[1] - 1)
 
             # Create and train the model
-            model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=thresholdValue)
+            model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=thresholdValue, epoch=self.EPOCHS)
             print("\n\n")
             print(f"Model with layers {l}, regularization {regularization}, batch size {batchSize}, step size {stepSize} created successfully")
 
@@ -76,17 +77,13 @@ class ModelSampler:
             recall.append(recLC)
             models.append(model)
 
-            plotLearningCurve(accLC, preLC, recLC, f1LC, model, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
+            plotLearningCurve(accLC, f1LC, preLC, recLC, model, title="Model Performance of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
 
         # Plot the metrics
         # plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
         print("Model sampling completed successfully")
 
-
-def plotLearningCurve(accuracy, f1Score, precision, recall, model, title="Model Performance"):
-    # Convert models to string representations of their architectures
-    model_architectures = [f"Layers: {model.layersSkeleton}"]
-
+def plotLearningCurve(accuracy, f1Score, precision, recall, model:TrainModel, title="Model Performance"):
     # Set Seaborn style and color palette
     sns.set(style="whitegrid")
     palette = sns.color_palette("Set2")
@@ -97,26 +94,26 @@ def plotLearningCurve(accuracy, f1Score, precision, recall, model, title="Model 
     # Generate epoch numbers for the x-axis
     epochs = list(range(1, len(accuracy) + 1))
 
-    # Plot each metric with error bars (mean ± std deviation)
-    for i, (metric_name, values) in enumerate(zip(["Accuracy", "F1 Score", "Precision", "Recall"], [accuracy, f1Score, precision, recall])):
-        plt.errorbar(
+    # Ensure the order of metric names matches the order of metric values
+    metric_names = ["Accuracy", "F1 Score", "Recall", "Precision"]  # Corrected order
+    metric_values = [accuracy, f1Score, recall, precision]  # Corrected order
+
+    # Plot each metric
+    for i, (metric_name, values) in enumerate(zip(metric_names, metric_values)):
+        plt.plot(
             epochs,
             values,
-            # fmt='o',
+            # marker='o',
             label=metric_name,
             color=palette[i],
-            # capsize=5,
-            # capthick=2,
-            # markersize=8,
             linestyle='-'
         )
 
+    # Customize the plot
     plt.xlabel('Epochs', fontsize=12)
     plt.ylabel('Metric Value', fontsize=12)
     plt.title(title, fontsize=14)
-    # plt.ylim(0,100)
-    plt.xticks(ticks=range(len(model_architectures)), labels=model_architectures, rotation=45, ha='right', fontsize=10)
-    plt.legend(fontsize=10, loc='upper left')
+    plt.legend(fontsize=10, loc='lower right')
     plt.tight_layout()
     plt.show()
 
@@ -173,8 +170,8 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     plt.show()
 
 if __name__ == "__main__":
-    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
-    modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='epochs')
+    modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
+    modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=0.01, stepSize=0.01, batchSize=32,stoppingCriterionCategory='epochs')
     print("Model sampling completed successfully")
 
 
