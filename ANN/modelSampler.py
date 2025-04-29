@@ -24,6 +24,7 @@ import seaborn as sns
 
 WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
 LOAN_LAYERS_SKELETON = [[5,1], [12,1],[5, 10, 1], [10,5,8,1]]
+
 TITANIC_LAYERS_SKELETON = [[20,1], [8,1],[16,4,8,1],[8,4,2,1]]
 RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 16, 8, 4, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
@@ -56,6 +57,8 @@ class ModelSampler:
         precision = []
         recall = []
         loss = []
+        modelAccuracy = []
+        modelF1Score = []
         models = []
 
         for layers in layerSkeleton:
@@ -78,12 +81,15 @@ class ModelSampler:
             recall.append(recLC)
             loss = np.squeeze(lossLC)
             models.append(model)
+            modelAccuracy.append(model.finalModalAccuracy)
+            modelF1Score.append(model.finalModalF1Score)
 
-            plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
-            plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            # plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
+            # plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            
 
         # Plot the metrics
-        # plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
+        plotMetrics(modelAccuracy, modelF1Score,  models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
         print("Model sampling completed successfully")
 
 def plotLearningCurve(accuracy, f1Score, precision, recall, title="Model Performance"):
@@ -153,7 +159,7 @@ def plotLearningCurveLoss(loss, title="Model Learning Curve"):
     plt.show()
 
 
-def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance"):
+def plotMetrics(accuracy, f1Score, models, title="Model Performance"):
     # Convert models to string representations of their architectures
     model_architectures = [f"Layers: {model.layersSkeleton}" for model in models]
 
@@ -161,8 +167,6 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     metrics = {
         "Accuracy": accuracy,
         "F1 Score": f1Score,
-        "Precision": precision,
-        "Recall": recall
     }
     metric_means = {key: np.mean(values) for key, values in metrics.items()}
     metric_stds = {key: np.std(values) for key, values in metrics.items()}
@@ -190,21 +194,17 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
         )
 
     # Annotate metric values on every point
-    for i, (acc, f1, pre, rec) in enumerate(zip(accuracy, f1Score, precision, recall)):
+    for i, (acc, f1) in enumerate(zip(accuracy, f1Score)):
         plt.annotate(f"{acc:.2f}", (i, accuracy[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
         plt.annotate(f"{f1:.2f}", (i, f1Score[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
-        plt.annotate(f"{pre:.2f}", (i, precision[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
-        plt.annotate(f"{rec:.2f}", (i, recall[i]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
 
     plt.xlabel('Model Architecture', fontsize=12)
     plt.ylabel('Metric Value', fontsize=12)
     plt.title(title, fontsize=14)
-    # plt.ylim(0,100)
     plt.xticks(ticks=range(len(model_architectures)), labels=model_architectures, rotation=45, ha='right', fontsize=10)
     plt.legend(fontsize=10, loc='upper left')
     plt.tight_layout()
     plt.show()
-
 def moving_average(data, window_size=5):
     """
     Compute the moving average of a list of values.
@@ -223,14 +223,14 @@ if __name__ == "__main__":
     # [2, 4, 8 , 1], [4, 8, 16, 1], [8, 16, 8, 1], [16, 8, 4, 1],  # 3 Hidden Layers
     # [2, 4, 8, 16, 1], [4, 8, 16, 8, 1], [8, 16, 8, 4, 1], [16, 8, 4, 2, 1]  # 4 Hidden Layers
     # ]
-    # modelSampler = ModelSampler(filePath='/Users/swethasaseendran/Documents/UMass/589 Machine Learning/COMPSCI589-Machine-Learning/ANN/datasets/loan.csv')
+    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
+    for reg in modelSampler.REGULARIZATION_VALUES:
+        for step in modelSampler.STEP_SIZE_VALUES:
+            for batch in modelSampler.BATCH_SIZE_VALUES:
+                print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
+                modelSampler.sampleModels(layerSkeleton = RAISIN_LAYERS_SKELETON ,regularization=reg, stepSize=step, batchSize=batch,stoppingCriterionCategory='error')
+                print("Model sampling completed successfully")
     # modelSampler.sampleModels(layerSkeleton = LOAN_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='error')
-    # print("Model sampling completed successfully")
+    print("Model sampling completed successfully")
 
-    # Raisin = [7,4,8,16,1] 
-
-    modelSampler = ModelSampler(filePath='/Users/swethasaseendran/Documents/UMass/589 Machine Learning/COMPSCI589-Machine-Learning/ANN/datasets/Raisin.csv')
-    best_architecture = RAISIN_LAYERS_SKELETON[3]
-    modelSampler.plotLossVsTrainingSamples(bestArchitecture=best_architecture, regularization=0.01, stepSize=0.01, batchSize=5)
-
-
+    # Raisin = [7,4,8,16,1]

@@ -23,6 +23,9 @@ class TrainModel:
         # self.getEpoch()  # Now call getEpoch after batchSize is initialized
         self.patience = patience
 
+        self.finalModalAccuracy = 0
+        self.finalModalF1Score = 0
+
     def getEpoch(self):
         # Calculate the total length of the first k-1 folds
         lenTrainFolds = sum(len(trainFold) for trainFold in self.preprocessor.foldedDataIndex[:-1])
@@ -94,7 +97,8 @@ class TrainModel:
                         foldEpochF1Score.append(f1)
                         foldEpochLoss.append(loss)
                         bar()
-                    # bar.finish()
+                print("Final model accuracy: ", finACC)
+                print("Final model F1 score: ", self.finalModalF1Score)
 
             else:
                 # Stop if change in error avg is less than epsilon
@@ -117,7 +121,10 @@ class TrainModel:
                     foldEpochRecall.append(rec)
                     foldEpochF1Score.append(f1)
                     foldEpochLoss.append(currErr)
-                    # bar()
+            
+            finACC, _, _, finF1, _ = self.testModel(X_test, y_test)
+            self.finalModalAccuracy += finACC
+            self.finalModalF1Score += finF1
                     
             # Append fold metrics to the epoch-level lists
             if len(epochAccuracies) == 0:
@@ -155,6 +162,8 @@ class TrainModel:
         for epoch, (acc, pre, rec, f1, loss) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores, epochLosses), start=1):
             print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%, Loss: {loss:.2f}%")
 
+        self.finalModalAccuracy /= self.preprocessor.kFold
+        self.finalModalF1Score /= self.preprocessor.kFold
         return kAccuracy, kPrecision, kRecall, kF1Score, kLoss
 
     def trainEpoch(self, X_train, y_train):

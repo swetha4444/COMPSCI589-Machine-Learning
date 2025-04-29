@@ -72,7 +72,7 @@ for i in range(len(x_train)):
         forwardPropagation.y = y
     print("Error: ", forwardPropagation.calculateError(i))
     print("--------------------------------------------------")
-forwardPropagation.calculateAvgError()
+forwardPropagation.calculateAvgError(length=len(x_train))
 print("Overall Error: ", forwardPropagation.J)
 
 
