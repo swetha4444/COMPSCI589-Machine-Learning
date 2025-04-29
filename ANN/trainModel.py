@@ -57,8 +57,8 @@ class TrainModel:
         self.buildModel()
 
         # Initialize lists to store metrics for each epoch across all folds
-        epochAccuracies = np.zeros(self.epoch, dtype=np.float64)  # Ensure float64 type
-        epochPrecisions = np.zeros(self.epoch, dtype=np.float64)  # Ensure float64 type
+        epochAccuracies = np.zeros(self.epoch, dtype=np.float64)
+        epochPrecisions = np.zeros(self.epoch, dtype=np.float64)
         epochRecalls = np.zeros(self.epoch, dtype=np.float64)
         epochF1Scores = np.zeros(self.epoch, dtype=np.float64)
         epochLosses = np.zeros(self.epoch, dtype=np.float64)
