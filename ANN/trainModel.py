@@ -53,13 +53,15 @@ class TrainModel:
         kPrecision = []
         kRecall = []
         kF1Score = []
+        kLoss = []
         self.buildModel()
 
         # Initialize lists to store metrics for each epoch across all folds
-        epochAccuracies = []
-        epochPrecisions = []
-        epochRecalls = []
-        epochF1Scores = []
+        epochAccuracies = np.zeros(self.epoch, dtype=np.float64)  # Ensure float64 type
+        epochPrecisions = np.zeros(self.epoch, dtype=np.float64)  # Ensure float64 type
+        epochRecalls = np.zeros(self.epoch, dtype=np.float64)
+        epochF1Scores = np.zeros(self.epoch, dtype=np.float64)
+        epochLosses = np.zeros(self.epoch, dtype=np.float64)
 
         for k in range(self.preprocessor.kFold):
             print(f"\nTraining on fold {k + 1}")
@@ -70,6 +72,7 @@ class TrainModel:
             foldEpochPrecision = []
             foldEpochRecall = []
             foldEpochF1Score = []
+            foldEpochLoss = []
 
             if stoppingCriterion == 'epochs':
                 # Print progress bar for epochs, not percentage but epoch number on the bar
@@ -84,11 +87,12 @@ class TrainModel:
                             self.trainEpoch(X_train_batch, y_train_batch)
 
                         # Evaluate on the test set for this epoch
-                        acc, pre, rec, f1 = self.testModel(X_test, y_test)
+                        acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
                         foldEpochAccuracy.append(acc)
                         foldEpochPrecision.append(pre)
                         foldEpochRecall.append(rec)
                         foldEpochF1Score.append(f1)
+                        foldEpochLoss.append(loss)
                         bar()
                     # bar.finish()
 
@@ -107,25 +111,27 @@ class TrainModel:
                         if abs(currErr - prevErr) < self.epsilon:
                             break
                         prevErr = currErr
-                    acc, pre, rec, f1 = self.testModel(X_test, y_test)
+                    acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
                     foldEpochAccuracy.append(acc)
                     foldEpochPrecision.append(pre)
                     foldEpochRecall.append(rec)
                     foldEpochF1Score.append(f1)
+                    foldEpochLoss.append(currErr)
                     # bar()
                     
-
             # Append fold metrics to the epoch-level lists
             if len(epochAccuracies) == 0:
                 epochAccuracies = np.array(foldEpochAccuracy)
                 epochPrecisions = np.array(foldEpochPrecision)
                 epochRecalls = np.array(foldEpochRecall)
                 epochF1Scores = np.array(foldEpochF1Score)
+                epochLosses = np.array(foldEpochLoss)
             else:
                 epochAccuracies += np.array(foldEpochAccuracy)
                 epochPrecisions += np.array(foldEpochPrecision)
                 epochRecalls += np.array(foldEpochRecall)
                 epochF1Scores += np.array(foldEpochF1Score)
+                epochLosses += np.array(foldEpochLoss)
 
             print(f"Testing on fold {k + 1} completed")
             print("--------------------------------------------------------")
@@ -135,19 +141,21 @@ class TrainModel:
         epochPrecisions /= self.preprocessor.kFold
         epochRecalls /= self.preprocessor.kFold
         epochF1Scores /= self.preprocessor.kFold
+        epochLosses /= self.preprocessor.kFold
 
         # Append the averaged metrics to kAccuracy, kPrecision, etc.
         kAccuracy.extend(epochAccuracies)
         kPrecision.extend(epochPrecisions)
         kRecall.extend(epochRecalls)
         kF1Score.extend(epochF1Scores)
+        kLoss.extend(epochLosses)
 
         # Print final metrics
         print("\nFinal Metrics Across All Epochs:")
-        for epoch, (acc, pre, rec, f1) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores), start=1):
-            print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%")
+        for epoch, (acc, pre, rec, f1, loss) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores, epochLosses), start=1):
+            print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%, Loss: {loss:.2f}%")
 
-        return kAccuracy, kPrecision, kRecall, kF1Score
+        return kAccuracy, kPrecision, kRecall, kF1Score, kLoss
 
     def trainEpoch(self, X_train, y_train):
         X_train = np.array(X_train, dtype=np.float64)  # Ensure X_train is a NumPy array with float64 dtype
@@ -167,28 +175,30 @@ class TrainModel:
         self.backPropagation.updateWeights()
 
     def testModel(self, X_test, y_test):
-        # return avg metric values of all k folds
-        X_test = np.array(X_test, dtype=np.float64)  # Ensure X_test is a NumPy array with float64 dtype
-        y_test = np.array(y_test, dtype=np.float64)  # Ensure y_test is a NumPy array with float64 dtype
+        # Ensure X_test and y_test are NumPy arrays
+        X_test = np.array(X_test, dtype=np.float64)
+        y_test = np.array(y_test, dtype=np.float64)
 
         y_pred = []
+        self.forwardPropagation.J = 0  # Reset J
+
         for i in range(len(X_test)):
             x = X_test[i].reshape(-1, 1)  # Reshape input to (n_features, 1)
-            self.forwardPropagation.forward(x)
+            self.forwardPropagation.forward(x)  # Perform forward propagation
             y_pred.append(self.forwardPropagation.layers[-1].a[0, 0])  # Get the probability of class 1
-        y_pred = np.array(y_pred)
-        y_pred_binary = (y_pred >= self.threshold).astype(int)  # Lower threshold to 0.5
-        accuracy = calculateAccuracy(y_test, y_pred_binary)
-        precision = calculatePrecision(y_test, y_pred_binary,labels=[0, 1])
-        recall = calculateRecall(y_test, y_pred_binary,labels=[0, 1])
-        f1 = calculateF1Score(y_test, y_pred_binary,labels=[0, 1])
+            self.forwardPropagation.calculateError(i)  # Calculate error for this sample
 
-        # print(f"Precision: {precision}")
-        # print(f"Recall: {recall}")
-        # print(f"Accuracy: {accuracy}")
-        # print(f"F1 Score: {f1}")
-        # print("Model testing completed successfully")
-        return accuracy, precision, recall, f1
+        self.forwardPropagation.calculateAvgError()  # Calculate average error (J)
+        y_pred = np.array(y_pred)
+        y_pred_binary = (y_pred >= self.threshold).astype(int)  # Convert probabilities to binary predictions
+
+        # Calculate other metrics
+        accuracy = calculateAccuracy(y_test, y_pred_binary)
+        precision = calculatePrecision(y_test, y_pred_binary, labels=[0, 1])
+        recall = calculateRecall(y_test, y_pred_binary, labels=[0, 1])
+        f1 = calculateF1Score(y_test, y_pred_binary, labels=[0, 1])
+
+        return accuracy, precision, recall, f1, self.forwardPropagation.J
 
 if __name__ == "__main__":
     preprocessor = DataPreprocessor(filePath='ANN/datasets/loan.csv')

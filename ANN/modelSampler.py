@@ -34,9 +34,9 @@ class ModelSampler:
     K_FOLD = 5
     EPOCHS = 100
     
-    def __init__(self, filePath):
+    def __init__(self, filePath, splice = None):
         self.filePath = filePath
-        self.preprocessor = DataPreprocessor(filePath=filePath, kFold=self.K_FOLD)
+        self.preprocessor = DataPreprocessor(filePath=filePath, kFold=self.K_FOLD, splice = None, randomSeed=9)
         self.preprocessor.load_data()
         self.preprocessor.encodeCategorical()
         self.preprocessor.normalizeData()
@@ -55,6 +55,7 @@ class ModelSampler:
         f1Score = []
         precision = []
         recall = []
+        loss = []
         models = []
 
         for layers in layerSkeleton:
@@ -68,22 +69,94 @@ class ModelSampler:
             print(f"Model with layers {l}, regularization {regularization}, batch size {batchSize}, step size {stepSize} created successfully")
 
             # Train the model using k-fold cross-validation and get Learbing curve (mtric vs epoch list)
-            accLC, preLC, recLC, f1LC = model.kFoldTrainTest(stoppingCriterion=stoppingCriterionCategory)
+            accLC, preLC, recLC, f1LC, lossLC = model.kFoldTrainTest(stoppingCriterion=stoppingCriterionCategory)
 
             # Append metrics and model to their respective lists
             accuracy.append(accLC)
             f1Score.append(f1LC)
             precision.append(preLC)
             recall.append(recLC)
+            loss = np.squeeze(lossLC)
             models.append(model)
 
-            plotLearningCurve(accLC, f1LC, preLC, recLC, model, title="Model Performance of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
+            plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
 
         # Plot the metrics
         # plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance of {} with regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],regularization, stepSize, batchSize))
         print("Model sampling completed successfully")
 
-def plotLearningCurve(accuracy, f1Score, precision, recall, model:TrainModel, title="Model Performance"):
+    def plotLossVsTrainingSamples(self, bestArchitecture, regularization=0.001, stepSize=0.001, batchSize=32, epochs=100, smooth=False):
+        """
+        Train the best model on increasing subsets of the training data and plot loss vs. training samples.
+        """
+        # Add input layer size to the architecture (if not already done)
+        if bestArchitecture[0] != self.preprocessor.data.shape[1] - 1:
+            bestArchitecture.insert(0, self.preprocessor.data.shape[1] - 1)
+
+        # Get the first train-test split (80-20%)
+        X_train, y_train, X_test, y_test = self.preprocessor.getTrainTestSplit(0)
+
+        # Shuffle the training data
+        # X_train, y_train = shuffle(X_train, y_train, random_state=42)
+
+        # Arrays to store results
+        train_sizes = []
+        test_losses = []
+
+        # Train model on increasing data sizes
+        for size in range(10, len(X_train) + 1, 10):
+            X_train_subset = X_train[:size]
+            y_train_subset = y_train[:size]
+
+            # Build and initialize model
+            model = TrainModel(
+                self.preprocessor,
+                bestArchitecture,
+                epsilon=1e-4,
+                batchSize=batchSize,
+                regularization=regularization,
+                stepSize=stepSize,
+                epoch=epochs
+            )
+            model.forwardPropagation = ForwardPropagation(bestArchitecture, batchSize=batchSize, regularization=regularization)
+            model.backPropagation = BackPropagation(bestArchitecture, model.forwardPropagation, batchSize=batchSize, regularization=regularization, stepSize=stepSize)
+            model.buildModel()
+
+            # Train the model
+            for epoch in range(epochs):
+                model.forwardPropagation.J = 0  # Reset loss
+                for batch_start in range(0, len(X_train_subset), batchSize):
+                    X_batch = X_train_subset[batch_start:batch_start + batchSize]
+                    y_batch = y_train_subset[batch_start:batch_start + batchSize]
+                    model.trainEpoch(X_batch, y_batch)
+
+            # Evaluate on test set and record true loss J
+            acc, _, _, _, test_loss = model.testModel(X_test, y_test)
+            train_sizes.append(size)
+            test_losses.append(test_loss)
+
+            print(f"Training samples: {size}, Test Loss: {test_loss:.4f}, Accuracy: {acc:.2f}%")
+
+        # Optional smoothing
+        if smooth and len(test_losses) >= 5:
+            def moving_average(data, w=5):
+                return np.convolve(data, np.ones(w)/w, mode='valid')
+            smooth_losses = moving_average(test_losses, w=5)
+            plt.plot(train_sizes[len(train_sizes) - len(smooth_losses):], smooth_losses, label="Smoothed Loss (MA)", color="green", linewidth=2)
+        else:
+            plt.plot(train_sizes, test_losses, marker='o', label="Test Loss", color="orange", linewidth=2)
+
+        # Plot
+        plt.xlabel("Number of Training Samples", fontsize=12)
+        plt.ylabel("Cross-Entropy Loss (J)", fontsize=12)
+        plt.title(f"Loss vs. Training Samples\n(α={stepSize}, Batch Size={batchSize}, λ={regularization})", fontsize=14)
+        plt.grid(True)
+        plt.legend(fontsize=10)
+        plt.tight_layout()
+        plt.show()
+
+def plotLearningCurve(accuracy, f1Score, precision, recall, title="Model Performance"):
     # Set Seaborn style and color palette
     sns.set(style="whitegrid")
     palette = sns.color_palette("Set2")
@@ -94,9 +167,8 @@ def plotLearningCurve(accuracy, f1Score, precision, recall, model:TrainModel, ti
     # Generate epoch numbers for the x-axis
     epochs = list(range(1, len(accuracy) + 1))
 
-    # Ensure the order of metric names matches the order of metric values
-    metric_names = ["Accuracy", "F1 Score", "Recall", "Precision"]  # Corrected order
-    metric_values = [accuracy, f1Score, recall, precision]  # Corrected order
+    metric_names = ["Accuracy", "F1 Score", "Recall", "Precision"]
+    metric_values = [accuracy, f1Score, recall, precision]
 
     # Plot each metric
     for i, (metric_name, values) in enumerate(zip(metric_names, metric_values)):
@@ -116,6 +188,40 @@ def plotLearningCurve(accuracy, f1Score, precision, recall, model:TrainModel, ti
     plt.legend(fontsize=10, loc='lower right')
     plt.tight_layout()
     plt.show()
+
+def plotLearningCurveLoss(loss, title="Model Learning Curve"):
+    # Set Seaborn style and color palette
+    sns.set(style="whitegrid")
+    palette = sns.color_palette("Set2")
+
+    # Create the plot
+    plt.figure(figsize=(14, 8))
+
+    # Generate epoch numbers for the x-axis
+    epochs = list(range(1, len(loss) + 1))
+
+    metric_names = ["Loss"]
+    metric_values = [loss]
+
+    # Plot each metric
+    for i, (metric_name, values) in enumerate(zip(metric_names, metric_values)):
+        plt.plot(
+            epochs,
+            values,
+            # marker='o',
+            label=metric_name,
+            color=palette[i],
+            linestyle='-'
+        )
+
+    # Customize the plot
+    plt.xlabel('Epochs', fontsize=12)
+    plt.ylabel('Metric Value', fontsize=12)
+    plt.title(title, fontsize=14)
+    plt.legend(fontsize=10, loc='lower right')
+    plt.tight_layout()
+    plt.show()
+
 
 def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Performance"):
     # Convert models to string representations of their architectures
@@ -169,9 +275,32 @@ def plotMetrics(accuracy, f1Score, precision, recall, models, title="Model Perfo
     plt.tight_layout()
     plt.show()
 
+def moving_average(data, window_size=5):
+    """
+    Compute the moving average of a list of values.
+    :param data: List of values (e.g., loss values).
+    :param window_size: Size of the moving average window.
+    :return: Smoothed list of values.
+    """
+    return np.convolve(data, np.ones(window_size) / window_size, mode='valid')
+
+
+
 if __name__ == "__main__":
-    modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
-    modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=0.01, stepSize=0.01, batchSize=32,stoppingCriterionCategory='epochs')
-    print("Model sampling completed successfully")
+    # layer_skeletons = [
+    # [2, 1], [4, 1], [8, 1], [16, 1],  # 1 Hidden Layer
+    # [2, 4, 1], [4, 8, 1], [8, 16, 1], [16, 8, 1],  # 2 Hidden Layers
+    # [2, 4, 8 , 1], [4, 8, 16, 1], [8, 16, 8, 1], [16, 8, 4, 1],  # 3 Hidden Layers
+    # [2, 4, 8, 16, 1], [4, 8, 16, 8, 1], [8, 16, 8, 4, 1], [16, 8, 4, 2, 1]  # 4 Hidden Layers
+    # ]
+    # modelSampler = ModelSampler(filePath='/Users/swethasaseendran/Documents/UMass/589 Machine Learning/COMPSCI589-Machine-Learning/ANN/datasets/loan.csv')
+    # modelSampler.sampleModels(layerSkeleton = LOAN_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='error')
+    # print("Model sampling completed successfully")
+
+    # Raisin = [7,4,8,16,1] 
+
+    modelSampler = ModelSampler(filePath='/Users/swethasaseendran/Documents/UMass/589 Machine Learning/COMPSCI589-Machine-Learning/ANN/datasets/Raisin.csv')
+    best_architecture = RAISIN_LAYERS_SKELETON[3]
+    modelSampler.plotLossVsTrainingSamples(bestArchitecture=best_architecture, regularization=0.01, stepSize=0.01, batchSize=5)
 
 

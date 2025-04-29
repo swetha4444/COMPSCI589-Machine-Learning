@@ -2,15 +2,18 @@ import numpy as np
 import pandas as pd
 
 class DataPreprocessor:
-    def __init__(self, filePath, labelColumn = 'label', kFold = 5, randomSeed = 42,):
+    def __init__(self, filePath, labelColumn = 'label', kFold = 5, randomSeed = 42, splice = None):
         self.kFold = kFold
         self.randomSeed = randomSeed
         self.filePath = filePath
         self.data = None
         self.labelColumn = labelColumn
+        self.splice = splice
 
     def load_data(self):
         self.data = pd.read_csv(self.filePath)
+        if self.splice is not None:
+            self.data = self.data[:self.splice]
         print(f"Data loaded successfully from {self.filePath}")
     
     def encodeCategorical(self):
@@ -48,6 +51,11 @@ class DataPreprocessor:
         y_train = self.data.iloc[trainFolds][self.labelColumn].values  # Labels
         X_test = self.data.iloc[testFold].drop(columns=[self.labelColumn]).values  # Features
         y_test = self.data.iloc[testFold][self.labelColumn].values  # Labels
+        print("X_Train shape:", X_train.shape)
+        print("y_Train shape:", y_train.shape)
+        print("X_Test shape:", X_test.shape)
+        print("y_Test shape:", y_test.shape)
+        print("Train and test data split successfully")
         return X_train, y_train, X_test, y_test
 
     def printDataDetails(self):
