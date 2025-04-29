@@ -170,7 +170,7 @@ class TrainModel:
             self.forwardPropagation.calculateError(i)
             self.backPropagation.calculateBlame()
             self.backPropagation.calculateGradient()
-        self.forwardPropagation.calculateAvgError()
+        self.forwardPropagation.calculateAvgError(len(y_train))
         self.backPropagation.calculateAvgGradient()
         self.backPropagation.updateWeights()
 
@@ -180,7 +180,7 @@ class TrainModel:
         y_test = np.array(y_test, dtype=np.float64)
 
         y_pred = []
-        self.forwardPropagation.J = 0  # Reset J
+        #self.forwardPropagation.J = 0  # Reset J
 
         for i in range(len(X_test)):
             x = X_test[i].reshape(-1, 1)  # Reshape input to (n_features, 1)
@@ -188,7 +188,7 @@ class TrainModel:
             y_pred.append(self.forwardPropagation.layers[-1].a[0, 0])  # Get the probability of class 1
             self.forwardPropagation.calculateError(i)  # Calculate error for this sample
 
-        self.forwardPropagation.calculateAvgError()  # Calculate average error (J)
+        self.forwardPropagation.calculateAvgError(len(y_test))  # Calculate average error (J)
         y_pred = np.array(y_pred)
         y_pred_binary = (y_pred >= self.threshold).astype(int)  # Convert probabilities to binary predictions
 
@@ -199,6 +199,7 @@ class TrainModel:
         f1 = calculateF1Score(y_test, y_pred_binary, labels=[0, 1])
 
         return accuracy, precision, recall, f1, self.forwardPropagation.J
+
 
 if __name__ == "__main__":
     preprocessor = DataPreprocessor(filePath='ANN/datasets/loan.csv')
