@@ -4,10 +4,11 @@ from layer import Layer
 from dataProcess import DataPreprocessor
 from forwardPropagation import ForwardPropagation
 from backPropagation import BackPropagation
-import progressbar
-import alive_progress
 from alive_progress import alive_bar
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+PRINT_LOG = False
 class TrainModel:
     def __init__(self, preprocessor: DataPreprocessor, layers: list, epsilon=0.01,
                   batchSize=10, regularization=0.25, stepSize=0.1, threshold=0.5,
@@ -52,11 +53,11 @@ class TrainModel:
         self.backPropagation = BackPropagation(self.layers, self.forwardPropagation, batchSize=self.batchSize, regularization=self.regularization, stepSize=self.stepSize)
     
     def kFoldTrainTest(self, stoppingCriterion='epochs'):
-        kAccuracy = []
-        kPrecision = []
-        kRecall = []
-        kF1Score = []
-        kLoss = []
+        epochAccuracies = []
+        epochPrecisions = []
+        epochRecalls = []
+        epochF1Scores = []
+        epochLosses = []
         self.buildModel()
 
         # Initialize lists to store metrics for each epoch across all folds
@@ -78,82 +79,75 @@ class TrainModel:
             foldEpochLoss = []
 
             if stoppingCriterion == 'epochs':
-                # Print progress bar for epochs, not percentage but epoch number on the bar
-                # use alive bar pip install alive-progress
                 with alive_bar(self.epoch, title="Training Progress", bar='classic2', spinner='waves',) as bar:
                     for epoch in range(self.epoch):
-                        # bar.update(epoch + 1)
-                        # Train on batches
                         for i in range(0, len(X_train), self.batchSize):
                             X_train_batch = X_train[i:i + self.batchSize]
                             y_train_batch = y_train[i:i + self.batchSize]
                             self.trainEpoch(X_train_batch, y_train_batch)
-
-                        # Evaluate on the test set for this epoch
-                        acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
+                        # Testing per epoch
+                        loss = self.forwardPropagation.J
+                        acc, pre, rec, f1, lossx = self.testModel(X_test, y_test)
                         foldEpochAccuracy.append(acc)
                         foldEpochPrecision.append(pre)
                         foldEpochRecall.append(rec)
                         foldEpochF1Score.append(f1)
                         foldEpochLoss.append(loss)
                         bar()
-                # Append fold metrics to the epoch-level lists
-                if len(epochAccuracies) == 0:
-                    epochAccuracies = np.array(foldEpochAccuracy)
-                    epochPrecisions = np.array(foldEpochPrecision)
-                    epochRecalls = np.array(foldEpochRecall)
-                    epochF1Scores = np.array(foldEpochF1Score)
-                    epochLosses = np.array(foldEpochLoss)
-                else:
-                    epochAccuracies += np.array(foldEpochAccuracy)
-                    epochPrecisions += np.array(foldEpochPrecision)
-                    epochRecalls += np.array(foldEpochRecall)
-                    epochF1Scores += np.array(foldEpochF1Score)
-                    epochLosses += np.array(foldEpochLoss)
+                    # Append fold metrics to the epoch-level lists
+                    if len(epochAccuracies) == 0:
+                        epochAccuracies = np.array(foldEpochAccuracy)
+                        epochPrecisions = np.array(foldEpochPrecision)
+                        epochRecalls = np.array(foldEpochRecall)
+                        epochF1Scores = np.array(foldEpochF1Score)
+                        epochLosses = np.array(foldEpochLoss)
+                        # print(epochLosses)
+                    else:
+                        epochAccuracies += np.array(foldEpochAccuracy)
+                        epochPrecisions += np.array(foldEpochPrecision)
+                        epochRecalls += np.array(foldEpochRecall)
+                        epochF1Scores += np.array(foldEpochF1Score)
+                        epochLosses += np.array(foldEpochLoss)
 
 
             else:
-                # Stop if change in error avg is less than epsilon
-                # for epoch in range(self.epoch):
-                currErr = float('inf')
-                prevErr = float('inf')
-                maxE = 1000 
+                maxE = 200 
                 epochCount = 0
+                # Initialize lists to store metrics for each epoch across all folds
+                epochAccuracies = np.zeros(maxE, dtype=np.float64)
+                epochPrecisions = np.zeros(maxE, dtype=np.float64)
+                epochRecalls = np.zeros(maxE, dtype=np.float64)
+                epochF1Scores = np.zeros(maxE, dtype=np.float64)
+                epochLosses = np.zeros(maxE, dtype=np.float64)
                 while epochCount < maxE:
                     for i in range(0, len(X_train), self.batchSize):
                         X_train_batch = X_train[i:i + self.batchSize]
                         y_train_batch = y_train[i:i + self.batchSize]
                         self.trainEpoch(X_train_batch, y_train_batch)
-                    currErr = self.forwardPropagation.J
-                    print(f"\tEpoch {epochCount + 1}: ΔError = {abs(currErr - prevErr):.6f}, Current Error = {currErr:.6f}")
-                    if abs(currErr - prevErr) < self.epsilon:
-                        break
-                    prevErr = currErr
-                    epochCount += 1
                     
-                    acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
+                    loss = self.forwardPropagation.J
+                    acc, pre, rec, f1, _ = self.testModel(X_test, y_test)
+                    # print(acc,pre,rec,f1,loss, epochCount)
                     foldEpochAccuracy.append(acc)
                     foldEpochPrecision.append(pre)
                     foldEpochRecall.append(rec)
                     foldEpochF1Score.append(f1)
-                    foldEpochLoss.append(self.forwardPropagation.J)
+                    foldEpochLoss.append(loss)
+                    epochCount += 1
                     
-                # Append fold metrics to the epoch-level lists and slice to minimum epochs common across folds
+                    if len(epochAccuracies) == 0:
+                        epochAccuracies = np.array(foldEpochAccuracy)
+                        epochPrecisions = np.array(foldEpochPrecision)
+                        epochRecalls = np.array(foldEpochRecall)
+                        epochF1Scores = np.array(foldEpochF1Score)
+                        epochLosses = np.array(foldEpochLoss)
+                    else:
+                        epochAccuracies += np.array(foldEpochAccuracy)
+                        epochPrecisions += np.array(foldEpochPrecision)
+                        epochRecalls += np.array(foldEpochRecall)
+                        epochF1Scores += np.array(foldEpochF1Score)
+                        epochLosses += np.array(foldEpochLoss)
                 
-                if len(epochAccuracies) == 0:
-                    epochAccuracies = np.array(foldEpochAccuracy)
-                    epochPrecisions = np.array(foldEpochPrecision)
-                    epochRecalls = np.array(foldEpochRecall)
-                    epochF1Scores = np.array(foldEpochF1Score)
-                    epochLosses = np.array(foldEpochLoss)
-                else:
-                    epochAccuracies += np.array(foldEpochAccuracy)
-                    epochPrecisions += np.array(foldEpochPrecision)
-                    epochRecalls += np.array(foldEpochRecall)
-                    epochF1Scores += np.array(foldEpochF1Score)
-                    epochLosses += np.array(foldEpochLoss)
-
-            
             finACC, _, _, finF1, _ = self.testModel(X_test, y_test)
             self.finalModalAccuracy += finACC
             self.finalModalF1Score += finF1
@@ -169,21 +163,33 @@ class TrainModel:
         epochF1Scores /= self.preprocessor.kFold
         epochLosses /= self.preprocessor.kFold
 
-        # Append the averaged metrics to kAccuracy, kPrecision, etc.
-        kAccuracy.extend(epochAccuracies)
-        kPrecision.extend(epochPrecisions)
-        kRecall.extend(epochRecalls)
-        kF1Score.extend(epochF1Scores)
-        kLoss.extend(epochLosses)
+        if stoppingCriterion != 'epochs':
+            # check the changes in lossprev - curr <epsilon and slice till that and return the metrics
+            index = 0
+            for i in range(1, len(epochLosses)):
+                # print(self.epsilon, abs(epochLosses[i] - epochLosses[i - 1]), self.epsilon < abs(epochLosses[i] - epochLosses[i - 1]))
+                # print(f"Epoch {i + 1}: Loss = {epochLosses[i]:.6f}, ΔLoss = {abs(epochLosses[i] - epochLosses[i - 1]):.6f}, Accuracy = {epochAccuracies[i]:.6f}, Precision = {epochPrecisions[i]:.6f}, Recall = {epochRecalls[i]:.6f}, F1 Score = {epochF1Scores[i]:.6f}")
+                if abs(epochLosses[i] - epochLosses[i - 1]) < self.epsilon:
+                    index = i
+                    break
+            print(f"Stopping criterion met at epoch {index + 1} with loss change {abs(epochLosses[i] - epochLosses[i - 1]):.6f}")
+            if (index < 5):
+                index = 5
+                    
+            # print(index, epochLosses[:index], epochLosses)
+            self.finalModalAccuracy /= self.preprocessor.kFold
+            self.finalModalF1Score /= self.preprocessor.kFold
+            return epochAccuracies[:index], epochPrecisions[:index], epochRecalls[:index], epochF1Scores[:index], epochLosses[:index]
 
         # Print final metrics
-        print("\nFinal Metrics Across All Epochs:")
-        for epoch, (acc, pre, rec, f1, loss) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores, epochLosses), start=1):
-            print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%, Loss: {loss:.2f}%")
+        if PRINT_LOG:
+            print("\nFinal Metrics Across All Epochs:")
+            for epoch, (acc, pre, rec, f1, loss) in enumerate(zip(epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores, epochLosses), start=1):
+                print(f"Epoch {epoch}: Accuracy: {acc:.2f}%, Precision: {pre:.2f}%, Recall: {rec:.2f}%, F1 Score: {f1:.2f}%, Loss: {loss:.2f}%")
 
         self.finalModalAccuracy /= self.preprocessor.kFold
         self.finalModalF1Score /= self.preprocessor.kFold
-        return kAccuracy, kPrecision, kRecall, kF1Score, kLoss
+        return epochAccuracies, epochPrecisions, epochRecalls, epochF1Scores, epochLosses
 
     def trainEpoch(self, X_train, y_train):
         X_train = np.array(X_train, dtype=np.float64)  # Ensure X_train is a NumPy array with float64 dtype
@@ -208,7 +214,7 @@ class TrainModel:
         y_test = np.array(y_test, dtype=np.float64)
 
         y_pred = []
-        #self.forwardPropagation.J = 0  # Reset J
+        self.forwardPropagation.J = 0  # Reset J
 
         for i in range(len(X_test)):
             x = X_test[i].reshape(-1, 1)  # Reshape input to (n_features, 1)
@@ -229,6 +235,40 @@ class TrainModel:
         return accuracy, precision, recall, f1, self.forwardPropagation.J
 
 
+def plotLearningCurveLoss(loss, title="Model Learning Curve"):
+    # Set Seaborn style and color palette
+    sns.set(style="whitegrid")
+    palette = sns.color_palette("Set2")
+
+    # Create the plot
+    plt.figure(figsize=(14, 8))
+
+    # Generate epoch numbers for the x-axis
+    epochs = list(range(1, len(loss) + 1))
+
+    metric_names = ["Loss"]
+    metric_values = [loss]
+
+    # Plot each metric
+    for i, (metric_name, values) in enumerate(zip(metric_names, metric_values)):
+        plt.plot(
+            epochs,
+            values,
+            # marker='o',
+            label=metric_name,
+            color=palette[i],
+            linestyle='-'
+        )
+
+    # Customize the plot
+    plt.xlabel('Epochs', fontsize=12)
+    plt.ylabel('Metric Value', fontsize=12)
+    plt.title(title, fontsize=14)
+    plt.legend(fontsize=10, loc='lower right')
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     preprocessor = DataPreprocessor(filePath='ANN/datasets/loan.csv')
     preprocessor.load_data()
@@ -237,12 +277,18 @@ if __name__ == "__main__":
     preprocessor.stratifiedKFold()
     preprocessor.printDataDetails()
 
-    layers = [preprocessor.data.shape[1] - 1, 10,12, 1]  
+    layers = [preprocessor.data.shape[1] - 1, 10,5,8, 1]  
     epsilon = 0.01
     batchSize = 10
     regularization = 0.01
-    stepSize = 0.01
+    stepSize = 0.05
 
-    model = TrainModel(preprocessor, layers, epsilon, batchSize, regularization, stepSize=stepSize)
+    model = TrainModel(preprocessor, layers, epsilon, batchSize, regularization, stepSize=stepSize, epoch=100)
     model.kFoldTrainTest(stoppingCriterion='epochs')
+    accLC, preLC, recLC, f1LC, lossLC = model.kFoldTrainTest(stoppingCriterion='epochs')
+    print("acc:",model.finalModalAccuracy, "f1: ", model.finalModalF1Score)
+    # plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
+    loss = np.squeeze(lossLC)
+    plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format("loan.csv",layers,regularization, stepSize, batchSize))
+            
     print("Training completed.")

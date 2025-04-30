@@ -7,3 +7,8 @@ Random Forest/.DS_Store
 
 *.cpython-313.pyc
 ANN/visualizeArchitecture.py
+ANN/outputs/*
+.vscode/settings.json
+Decision Tree/.DS_Store
+wbdc.txt
+.gitignore
