@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-WDBC_LAYERS_SKELETON = [[1], [20,1], [18,1],[15, 22, 1], [18,20,18,1]] 
+WDBC_LAYERS_SKELETON = [[16,4,8,1], [30,8,4,2,1],[15, 22, 1], [18,20,18,1]] 
 LOAN_LAYERS_SKELETON = [[5,1], [12,1],[5, 10, 1], [10,5,8,1]]
 
 TITANIC_LAYERS_SKELETON = [[20,1], [8,1],[16,4,8,1],[8,4,2,1]]
@@ -30,8 +30,8 @@ RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 16, 8, 4, 1],[10, 8, 6, 8,
 class ModelSampler:
     EPSILON = 0.01
     REGULARIZATION_VALUES = [0.01,0.025]
-    STEP_SIZE_VALUES = [0.01, 0.05]
-    BATCH_SIZE_VALUES = [5, 10]
+    STEP_SIZE_VALUES = [0.1,0.01, 0.05]
+    BATCH_SIZE_VALUES = [32, 10]
     K_FOLD = 5
     EPOCHS = 100
     
@@ -85,7 +85,7 @@ class ModelSampler:
             modelF1Score.append(model.finalModalF1Score)
 
             # plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
-            # plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
             
 
         # Plot the metrics
@@ -223,12 +223,12 @@ if __name__ == "__main__":
     # [2, 4, 8 , 1], [4, 8, 16, 1], [8, 16, 8, 1], [16, 8, 4, 1],  # 3 Hidden Layers
     # [2, 4, 8, 16, 1], [4, 8, 16, 8, 1], [8, 16, 8, 4, 1], [16, 8, 4, 2, 1]  # 4 Hidden Layers
     # ]
-    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
+    modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
     for reg in modelSampler.REGULARIZATION_VALUES:
         for step in modelSampler.STEP_SIZE_VALUES:
             for batch in modelSampler.BATCH_SIZE_VALUES:
                 print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
-                modelSampler.sampleModels(layerSkeleton = RAISIN_LAYERS_SKELETON ,regularization=reg, stepSize=step, batchSize=batch,stoppingCriterionCategory='error')
+                modelSampler.sampleModels(layerSkeleton = WDBC_LAYERS_SKELETON ,regularization=reg, stepSize=step, batchSize=batch,stoppingCriterionCategory='epochs')
                 print("Model sampling completed successfully")
     # modelSampler.sampleModels(layerSkeleton = LOAN_LAYERS_SKELETON ,regularization=0.01, stepSize=0.1, batchSize=32,stoppingCriterionCategory='error')
     print("Model sampling completed successfully")

@@ -97,49 +97,68 @@ class TrainModel:
                         foldEpochF1Score.append(f1)
                         foldEpochLoss.append(loss)
                         bar()
-                print("Final model accuracy: ", finACC)
-                print("Final model F1 score: ", self.finalModalF1Score)
+                # Append fold metrics to the epoch-level lists
+                if len(epochAccuracies) == 0:
+                    epochAccuracies = np.array(foldEpochAccuracy)
+                    epochPrecisions = np.array(foldEpochPrecision)
+                    epochRecalls = np.array(foldEpochRecall)
+                    epochF1Scores = np.array(foldEpochF1Score)
+                    epochLosses = np.array(foldEpochLoss)
+                else:
+                    epochAccuracies += np.array(foldEpochAccuracy)
+                    epochPrecisions += np.array(foldEpochPrecision)
+                    epochRecalls += np.array(foldEpochRecall)
+                    epochF1Scores += np.array(foldEpochF1Score)
+                    epochLosses += np.array(foldEpochLoss)
+
 
             else:
                 # Stop if change in error avg is less than epsilon
-                for epoch in range(self.epoch):
-                    currErr = 0
-                    prevErr = 0
-                    while True:
-                        for i in range(0, len(X_train), self.batchSize):
-                            X_train_batch = X_train[i:i + self.batchSize]
-                            y_train_batch = y_train[i:i + self.batchSize]
-                            self.trainEpoch(X_train_batch, y_train_batch)
-                        currErr = self.forwardPropagation.J
-                        # print(f"\t\tΔError: {abs(currErr - prevErr)}")
-                        if abs(currErr - prevErr) < self.epsilon:
-                            break
-                        prevErr = currErr
+                # for epoch in range(self.epoch):
+                currErr = float('inf')
+                prevErr = float('inf')
+                maxE = 1000 
+                epochCount = 0
+                while epochCount < maxE:
+                    for i in range(0, len(X_train), self.batchSize):
+                        X_train_batch = X_train[i:i + self.batchSize]
+                        y_train_batch = y_train[i:i + self.batchSize]
+                        self.trainEpoch(X_train_batch, y_train_batch)
+                    currErr = self.forwardPropagation.J
+                    print(f"\tEpoch {epochCount + 1}: ΔError = {abs(currErr - prevErr):.6f}, Current Error = {currErr:.6f}")
+                    if abs(currErr - prevErr) < self.epsilon:
+                        break
+                    prevErr = currErr
+                    epochCount += 1
+                    
                     acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
                     foldEpochAccuracy.append(acc)
                     foldEpochPrecision.append(pre)
                     foldEpochRecall.append(rec)
                     foldEpochF1Score.append(f1)
-                    foldEpochLoss.append(currErr)
+                    foldEpochLoss.append(self.forwardPropagation.J)
+                    
+                # Append fold metrics to the epoch-level lists and slice to minimum epochs common across folds
+                
+                if len(epochAccuracies) == 0:
+                    epochAccuracies = np.array(foldEpochAccuracy)
+                    epochPrecisions = np.array(foldEpochPrecision)
+                    epochRecalls = np.array(foldEpochRecall)
+                    epochF1Scores = np.array(foldEpochF1Score)
+                    epochLosses = np.array(foldEpochLoss)
+                else:
+                    epochAccuracies += np.array(foldEpochAccuracy)
+                    epochPrecisions += np.array(foldEpochPrecision)
+                    epochRecalls += np.array(foldEpochRecall)
+                    epochF1Scores += np.array(foldEpochF1Score)
+                    epochLosses += np.array(foldEpochLoss)
+
             
             finACC, _, _, finF1, _ = self.testModel(X_test, y_test)
             self.finalModalAccuracy += finACC
             self.finalModalF1Score += finF1
                     
-            # Append fold metrics to the epoch-level lists
-            if len(epochAccuracies) == 0:
-                epochAccuracies = np.array(foldEpochAccuracy)
-                epochPrecisions = np.array(foldEpochPrecision)
-                epochRecalls = np.array(foldEpochRecall)
-                epochF1Scores = np.array(foldEpochF1Score)
-                epochLosses = np.array(foldEpochLoss)
-            else:
-                epochAccuracies += np.array(foldEpochAccuracy)
-                epochPrecisions += np.array(foldEpochPrecision)
-                epochRecalls += np.array(foldEpochRecall)
-                epochF1Scores += np.array(foldEpochF1Score)
-                epochLosses += np.array(foldEpochLoss)
-
+            
             print(f"Testing on fold {k + 1} completed")
             print("--------------------------------------------------------")
 
