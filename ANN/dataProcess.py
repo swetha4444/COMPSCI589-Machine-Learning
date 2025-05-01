@@ -12,13 +12,17 @@ class DataPreprocessor:
 
     def load_data(self):
         self.data = pd.read_csv(self.filePath)
-        if self.splice is not None:
-            self.data = self.data[:self.splice]
         print(f"Data loaded successfully from {self.filePath}")
-    
+
     def encodeCategorical(self):
-        self.data = pd.get_dummies(self.data, drop_first=True)
-        print("Categorical variables encoded successfully")
+        # Find categorical columns (object or category dtype)
+        cat_cols = self.data.select_dtypes(include=['object', 'category']).columns
+        if len(cat_cols) == 0:
+            print("No categorical variables to encode.")
+            return
+        for col in cat_cols:
+            self.data[col] = self.data[col].astype('category').cat.codes
+        print("Categorical variables label-encoded successfully (no new columns added)")
     
     def normalizeData(self):
         numeric_columns = self.data.select_dtypes(include=[np.number])

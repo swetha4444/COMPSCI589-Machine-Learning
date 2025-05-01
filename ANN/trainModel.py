@@ -94,20 +94,20 @@ class TrainModel:
                         foldEpochF1Score.append(f1)
                         foldEpochLoss.append(loss)
                         bar()
-                    # Append fold metrics to the epoch-level lists
-                    if len(epochAccuracies) == 0:
-                        epochAccuracies = np.array(foldEpochAccuracy)
-                        epochPrecisions = np.array(foldEpochPrecision)
-                        epochRecalls = np.array(foldEpochRecall)
-                        epochF1Scores = np.array(foldEpochF1Score)
-                        epochLosses = np.array(foldEpochLoss)
-                        # print(epochLosses)
-                    else:
-                        epochAccuracies += np.array(foldEpochAccuracy)
-                        epochPrecisions += np.array(foldEpochPrecision)
-                        epochRecalls += np.array(foldEpochRecall)
-                        epochF1Scores += np.array(foldEpochF1Score)
-                        epochLosses += np.array(foldEpochLoss)
+                # Append fold metrics to the epoch-level lists
+                if len(epochAccuracies) == 0:
+                    epochAccuracies = np.array(foldEpochAccuracy)
+                    epochPrecisions = np.array(foldEpochPrecision)
+                    epochRecalls = np.array(foldEpochRecall)
+                    epochF1Scores = np.array(foldEpochF1Score)
+                    epochLosses = np.array(foldEpochLoss)
+                    # print(epochLosses)
+                else:
+                    epochAccuracies += np.array(foldEpochAccuracy)
+                    epochPrecisions += np.array(foldEpochPrecision)
+                    epochRecalls += np.array(foldEpochRecall)
+                    epochF1Scores += np.array(foldEpochF1Score)
+                    epochLosses += np.array(foldEpochLoss)
 
 
             else:
@@ -126,7 +126,7 @@ class TrainModel:
                         self.trainEpoch(X_train_batch, y_train_batch)
                     
                     loss = self.forwardPropagation.J
-                    acc, pre, rec, f1, _ = self.testModel(X_test, y_test)
+                    acc, pre, rec, f1, loss = self.testModel(X_test, y_test)
                     # print(acc,pre,rec,f1,loss, epochCount)
                     foldEpochAccuracy.append(acc)
                     foldEpochPrecision.append(pre)
@@ -135,18 +135,18 @@ class TrainModel:
                     foldEpochLoss.append(loss)
                     epochCount += 1
                     
-                    if len(epochAccuracies) == 0:
-                        epochAccuracies = np.array(foldEpochAccuracy)
-                        epochPrecisions = np.array(foldEpochPrecision)
-                        epochRecalls = np.array(foldEpochRecall)
-                        epochF1Scores = np.array(foldEpochF1Score)
-                        epochLosses = np.array(foldEpochLoss)
-                    else:
-                        epochAccuracies += np.array(foldEpochAccuracy)
-                        epochPrecisions += np.array(foldEpochPrecision)
-                        epochRecalls += np.array(foldEpochRecall)
-                        epochF1Scores += np.array(foldEpochF1Score)
-                        epochLosses += np.array(foldEpochLoss)
+                if len(epochAccuracies) == 0:
+                    epochAccuracies = np.array(foldEpochAccuracy)
+                    epochPrecisions = np.array(foldEpochPrecision)
+                    epochRecalls = np.array(foldEpochRecall)
+                    epochF1Scores = np.array(foldEpochF1Score)
+                    epochLosses = np.array(foldEpochLoss)
+                else:
+                    epochAccuracies += np.array(foldEpochAccuracy)
+                    epochPrecisions += np.array(foldEpochPrecision)
+                    epochRecalls += np.array(foldEpochRecall)
+                    epochF1Scores += np.array(foldEpochF1Score)
+                    epochLosses += np.array(foldEpochLoss)
                 
             finACC, _, _, finF1, _ = self.testModel(X_test, y_test)
             self.finalModalAccuracy += finACC
@@ -174,7 +174,7 @@ class TrainModel:
                     break
             print(f"Stopping criterion met at epoch {index + 1} with loss change {abs(epochLosses[i] - epochLosses[i - 1]):.6f}")
             if (index < 5):
-                index = 5
+                index = 20
                     
             # print(index, epochLosses[:index], epochLosses)
             self.finalModalAccuracy /= self.preprocessor.kFold

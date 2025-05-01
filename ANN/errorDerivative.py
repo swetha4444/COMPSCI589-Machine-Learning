@@ -75,7 +75,7 @@ def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regular
         forwardPropagation1.forward(x_instance)
         forwardPropagation1.y = y_instance
         forwardPropagation1.calculateError(i)
-    forwardPropagation1.calculateAvgError()
+    forwardPropagation1.calculateAvgError(len(x))
     err1 = forwardPropagation1.J
     print(f"Error with theta + epsilon: {err1}")
 
@@ -87,10 +87,10 @@ def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regular
         forwardPropagation2.forward(x_instance)
         forwardPropagation2.y = y_instance
         forwardPropagation2.calculateError(i)
-    forwardPropagation2.calculateAvgError()
+    forwardPropagation2.calculateAvgError(len(x))
     err2 = forwardPropagation2.J
     print(f"Error with theta - epsilon: {err2}")
-    print("Gradient error derivative: ", (err1 - err2) / (2 * epsilon))
+    print("Gradient error numerical: ", (err1 - err2) / (2 * epsilon))
     return (err1 - err2) / (2 * epsilon)
 
 def actualErrorDerivative(layers, x, y, weightIndex=(1,1,2), regularizationValue=0):
@@ -134,35 +134,43 @@ def initTest2():
     layers.append(outputLayer)
     return layers
 
+def run_all_weights(neuronsPerLayer, initLayersFunc, x_train, y_train, regularizationValue=0):
+    epsilons = [0.000001, 0.1]
+    for epsilon in epsilons:
+        print(f"\nRunning with ε = {epsilon}")
+        layers = initLayersFunc()
+        for layer_idx, layer in enumerate(layers):
+            if layer.weight is None:
+                continue
+            rows, cols = layer.weight.shape
+            for i in range(rows):
+                for j in range(cols):
+                    print(f"\n--- Layer {layer_idx+1}, Weight[{i},{j}] ---")
+                    # Estimate numerical gradient
+                    layers = initLayersFunc()
+                    errorDerivative(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), epsilon=epsilon, regularizationValue=regularizationValue)
+                    # Compute backprop gradient
+                    layers = initLayersFunc()
+                    actualErrorDerivative(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), regularizationValue=regularizationValue)
+
+
 
 if __name__ == "__main__":
     test1 = True
     test2 = True
     if test1:
-        print("\n------------------")
-        print("Backpropagation 1")
-        print("------------------")
+        print("\n------------------------")
+        print("Backpropagation File 1")
+        print("------------------------")
         neuronsPerLayer = [1, 2, 1]
         x_train = [np.array([[0.13]]), np.array([[0.42]])]
         y_train = [np.array([[0.9]]), np.array([[0.23]])]
-
-        layers = initTest1()
-        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.00001)
-        layers = initTest1()
-        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.1)
-        layers = initTest1()
-        actualErrorDerivative(layers, x_train, y_train, weightIndex=(1,1,1))
+        run_all_weights(neuronsPerLayer, initTest1, x_train, y_train)
     if test2:
-        print("\n------------------")
-        print("Backpropagation 2")
-        print("------------------")
+        print("\n------------------------")
+        print("Backpropagation File 2")
+        print("------------------------")
         x_train = [np.array([[0.32], [0.68]]), np.array([[0.83], [0.02]])]
         y_train = [np.array([[0.75], [0.98]]), np.array([[0.75], [0.28]])]
         neuronsPerLayer = [2, 4, 3, 2]
-
-        layers = initTest2()
-        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.00001,regularizationValue=0.25)
-        layers = initTest2()
-        errorDerivative(layers, x_train, y_train, weightIndex=(1,1,1), epsilon=0.1,regularizationValue=0.25)
-        layers = initTest2()
-        actualErrorDerivative(layers, x_train, y_train, weightIndex=(1,1,1),regularizationValue=0.25)
+        run_all_weights(neuronsPerLayer, initTest2, x_train, y_train, regularizationValue=0.25)

@@ -1,9 +1,7 @@
 '''
 Train a neural network and evaluate it using the stratified cross-validation technique discussed in
 class. You should train neural networks using different values for the regularization parameter, λ,
-and using different architectures. You can decide which architectures you will evaluate. As an
-example, consider testing networks with 1, 2, 3, and 4 hidden layers, and with various numbers of
-neurons per layer: e.g., 2, 4, 8, 16.
+and using different architectures. You can decide which architectures you will evaluate. 
 2. For each trained neural network (i.e., for each combination of architecture and regularization that
 you tested), you should measure the resulting model’s accuracy and F1 score.
 5
@@ -32,12 +30,12 @@ LOAN_LAYERS_SKELETON = [[5,1], [12,1],[5, 10, 1], [10,5,8,1],
 TITANIC_LAYERS_SKELETON = [[20,1], [8,1],[8,4,2,1]]
 RAISIN_LAYERS_SKELETON =  [[1], [5,1],[10, 8, 1],[10, 16, 8, 4, 1],[10, 8, 6, 8, 1]]
 class ModelSampler:
-    EPSILON = 1e-7
+    EPSILON = 1e-4
     REGULARIZATION_VALUES = [0.01,0.025]
     STEP_SIZE_VALUES = [0.01, 0.05]
     BATCH_SIZE_VALUES = [10,32, 20]
     K_FOLD = 5
-    EPOCHS = 1000
+    EPOCHS = 100
     
     def __init__(self, filePath, splice = None):
         self.filePath = filePath
@@ -71,6 +69,7 @@ class ModelSampler:
             # Add input layer size to the beginning of the architecture
             l = layers.copy()
             l.insert(0, self.preprocessor.data.shape[1] - 1)
+            print(self.preprocessor.data.shape[1] - 1, "---------------", self.preprocessor.data.shape)
 
             # Create and train the model
             model = TrainModel(self.preprocessor, l, self.EPSILON, batchSize, regularization=regularization, stepSize=stepSize, threshold=thresholdValue, epoch=self.EPOCHS)
@@ -93,8 +92,8 @@ class ModelSampler:
 
             print("acc:",model.finalModalAccuracy, "f1: ", model.finalModalF1Score)
 
-            # plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Performance")
-            plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            # plotLearningCurveLoss(loss, title="Model Learning Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
+            # plotLearningCurve(accLC, f1LC, preLC, recLC, title="Model Acc and F1 variations Curve of {} with architecture {} regularization={}, stepSize={}, batchSize={}".format(self.filePath.split('/')[2],l,regularization, stepSize, batchSize))
             
 
         # Plot the metrics
@@ -138,8 +137,8 @@ def plotLearningCurve(accuracy, f1Score, precision, recall, title="Model Perform
     # Generate epoch numbers for the x-axis
     epochs = list(range(1, len(accuracy) + 1))
 
-    metric_names = ["Accuracy", "F1 Score", "Recall", "Precision"]
-    metric_values = [accuracy, f1Score, recall, precision]
+    metric_names = ["Accuracy", "F1 Score"]
+    metric_values = [accuracy, f1Score]
 
     # Plot each metric
     for i, (metric_name, values) in enumerate(zip(metric_names, metric_values)):
@@ -194,7 +193,7 @@ def plotLearningCurveLoss(loss, title="Model Learning Curve"):
     plt.show()
 
 
-def plotMetrics(accuracy, f1Score, models, title="Model Performance"):
+def plotMetrics(accuracy, f1Score, models:TrainModel, title="Model Performance"):
     # Convert models to string representations of their architectures
     model_architectures = [f"Layers: {model.layersSkeleton}" for model in models]
 
@@ -249,7 +248,7 @@ if __name__ == "__main__":
         [2, 4, 8, 1], [4, 8, 16, 1],  # 3 Hidden Layers
         [2, 4, 8, 16, 1], [4, 8, 16, 8, 1]  # 4 Hidden Layers
     ]
-    modelSampler = ModelSampler(filePath='ANN/datasets/loan.csv')
+    # modelSampler = ModelSampler(filePath='ANN/datasets/loan.csv')
     # for reg in modelSampler.REGULARIZATION_VALUES:
     #     for step in modelSampler.STEP_SIZE_VALUES:
     #         for batch in modelSampler.BATCH_SIZE_VALUES:
@@ -279,40 +278,57 @@ if __name__ == "__main__":
     #             )
     #             print("Model sampling completed successfully")
     
-    # modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
-    # for reg in modelSampler.REGULARIZATION_VALUES:
-    #     for step in modelSampler.STEP_SIZE_VALUES:
-    #         for batch in modelSampler.BATCH_SIZE_VALUES:
-    #             print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
-    #             layerSkeletons.extend(RAISIN_LAYERS_SKELETON) 
-    #             modelSampler.sampleModels(
-    #                 layerSkeleton=layerSkeletons,
-    #                 regularization=reg,
-    #                 stepSize=step,
-    #                 batchSize=batch,
-    #                 stoppingCriterionCategory='epochs'
-    #             )
-    #             print("Model sampling completed successfully")
-    # print("Model sampling completed successfully")
-    # modelSampler = ModelSampler(filePath='ANN/datasets/titanic.csv')
-    # for reg in modelSampler.REGULARIZATION_VALUES:
-    #     for step in modelSampler.STEP_SIZE_VALUES:
-    #         for batch in modelSampler.BATCH_SIZE_VALUES:
-    #             print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
-    #             layerSkeletons.extend(TITANIC_LAYERS_SKELETON) 
-    #             modelSampler.sampleModels(
-    #                 layerSkeleton=layerSkeletons,
-    #                 regularization=reg,
-    #                 stepSize=step,
-    #                 batchSize=batch,
-    #                 stoppingCriterionCategory='epochs'
-    #             )
-    #             print("Model sampling completed successfully")
-
-    modelSampler.sampleModels(
-                    layerSkeleton=[[10,5,8,1]],
-                    regularization=0.01,
-                    stepSize=0.05,
-                    batchSize=10,
+    modelSampler = ModelSampler(filePath='ANN/datasets/raisin.csv')
+    for reg in modelSampler.REGULARIZATION_VALUES:
+        for step in modelSampler.STEP_SIZE_VALUES:
+            for batch in modelSampler.BATCH_SIZE_VALUES:
+                print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
+                layerSkeletons.extend(RAISIN_LAYERS_SKELETON) 
+                modelSampler.sampleModels(
+                    layerSkeleton=layerSkeletons,
+                    regularization=reg,
+                    stepSize=step,
+                    batchSize=batch,
                     stoppingCriterionCategory='epochs'
                 )
+                print("Model sampling completed successfully")
+    print("Model sampling completed successfully")
+
+    modelSampler = ModelSampler(filePath='ANN/datasets/titanic.csv')
+    for reg in modelSampler.REGULARIZATION_VALUES:
+        for step in modelSampler.STEP_SIZE_VALUES:
+            for batch in modelSampler.BATCH_SIZE_VALUES:
+                print(f"Sampling models with regularization={reg}, stepSize={step}, batchSize={batch}")
+                layerSkeletons.extend(TITANIC_LAYERS_SKELETON) 
+                modelSampler.sampleModels(
+                    layerSkeleton=layerSkeletons,
+                    regularization=reg,
+                    stepSize=step,
+                    batchSize=batch,
+                    stoppingCriterionCategory='epochs'
+                )
+                print("Model sampling completed successfully")
+
+    
+    # modelSampler = ModelSampler(filePath='ANN/datasets/wdbc.csv')
+    # modelSampler.EPOCHS = 100
+    # modelSampler.sampleModels(
+    #                 layerSkeleton=[[6,8,12,8,1]],
+    #                 regularization=0.01,
+    #                 stepSize=0.05,
+    #                 batchSize=32,
+    #                 stoppingCriterionCategory='epochs'
+    #             )
+
+    # for reg in [0.01,0.05, 0.5, 1, 10]:
+    #     print(f"Sampling models with step reg={reg}")
+    #     # layerSkeletons.extend(LOAN_LAYERS_SKELETON) 
+    #     modelSampler.sampleModels(
+    #         layerSkeleton=[[16,8,1]],
+    #         regularization=reg,
+    #         stepSize=0.05,
+    #         batchSize=10,
+    #         stoppingCriterionCategory='epochs'
+    #     )
+    #     print("Model sampling completed successfully")
+    
