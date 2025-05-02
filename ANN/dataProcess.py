@@ -13,6 +13,7 @@ class DataPreprocessor:
     def load_data(self):
         self.data = pd.read_csv(self.filePath)
         print(f"Data loaded successfully from {self.filePath}")
+        print(f"Data shape: {self.data.shape}")
 
     def encodeCategorical(self):
         # Find categorical columns (object or category dtype)
@@ -23,6 +24,7 @@ class DataPreprocessor:
         for col in cat_cols:
             self.data[col] = self.data[col].astype('category').cat.codes
         print("Categorical variables label-encoded successfully (no new columns added)")
+        print(f"Data shape after encoding: {self.data.shape}")
     
     def normalizeData(self):
         numeric_columns = self.data.select_dtypes(include=[np.number])

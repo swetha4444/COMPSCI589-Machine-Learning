@@ -6,7 +6,7 @@ Random Forest/.DS_Store
 # Random Forest/main.py
 
 *.cpython-313.pyc
-ANN/visualizeArchitecture.py
+HW4/*
 ANN/outputs/*
 .vscode/settings.json
 Decision Tree/.DS_Store
@@ -15,3 +15,7 @@ wbdc.txt
 ANN/sample2plot.py
 .gitignore
 .gitignore
+HW4/errorDerivative.py
+ANN/samplePlot.py
+ANN/visualizeArchitecture.py
+ANN/samplePlot.py

@@ -65,19 +65,23 @@ from backPropagation import BackPropagation
 from layer import Layer
 from forwardPropagation import ForwardPropagation
 
-def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regularizationValue=0):
-    print("Epsilon: ", epsilon)
+def numericalGradient(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regularizationValue=0):
+    # print("Epsilon: ", epsilon)
     layers[weightIndex[0]-1].weight[weightIndex[1]][weightIndex[2]] += epsilon
     forwardPropagation1 = ForwardPropagation(layers=layers, batchSize=2, regularization=regularizationValue)
+    instanceErrorN = []
+    instanceErrorP = []
+    totalInstanceError = []
+
     for i in range(len(x)):
         x_instance = x[i]
         y_instance = y[i]
         forwardPropagation1.forward(x_instance)
         forwardPropagation1.y = y_instance
-        forwardPropagation1.calculateError(i)
+        instanceErrorP.append(forwardPropagation1.calculateError(i))
     forwardPropagation1.calculateAvgError(len(x))
     err1 = forwardPropagation1.J
-    print(f"Error with theta + epsilon: {err1}")
+    # print(f"Error with theta + epsilon: {err1}")
 
     layers[weightIndex[0]-1].weight[weightIndex[1]][weightIndex[2]] -=2* epsilon
     forwardPropagation2 = ForwardPropagation(layers=layers, batchSize=2, regularization=regularizationValue)
@@ -86,14 +90,21 @@ def errorDerivative(layers, x, y, weightIndex=(1,1,2), epsilon=0.000001, regular
         y_instance = y[i]
         forwardPropagation2.forward(x_instance)
         forwardPropagation2.y = y_instance
-        forwardPropagation2.calculateError(i)
+        instanceErrorN.append(forwardPropagation2.calculateError(i))
     forwardPropagation2.calculateAvgError(len(x))
     err2 = forwardPropagation2.J
-    print(f"Error with theta - epsilon: {err2}")
-    print("Gradient error numerical: ", (err1 - err2) / (2 * epsilon))
-    return (err1 - err2) / (2 * epsilon)
 
-def actualErrorDerivative(layers, x, y, weightIndex=(1,1,2), regularizationValue=0):
+    for i in range(len(x)):
+        err = (instanceErrorP[i] - instanceErrorN[i])/(2 * epsilon)
+        print("Numerical Gradient for instance ", i+1, ": ", err)
+        totalInstanceError.append(err)
+
+    # print(f"Error with theta - epsilon: {err2}")
+    print("Avg numerical gradient: ", (err1 - err2) / (2 * epsilon))
+    return (err1 - err2) / (2 * epsilon), totalInstanceError
+
+def algoGradient(layers, x, y, weightIndex=(1,1,2), regularizationValue=0):
+    print()
     forwardPropagation = ForwardPropagation(layers=layers, batchSize=2, regularization=regularizationValue)
     backPropagation = BackPropagation(layers, batchSize=2, regularization=regularizationValue)
     for i in range(len(x)):
@@ -102,9 +113,12 @@ def actualErrorDerivative(layers, x, y, weightIndex=(1,1,2), regularizationValue
         forwardPropagation.forward(x_instance)
         backPropagation.y = y_instance
         backPropagation.calculateBlame()
-        backPropagation.calculateGradient()
+        gradientTrack = backPropagation.calculateGradient()
+        print("Gradient for instance ", i+1, ": ", gradientTrack[weightIndex[0]][weightIndex[1]][weightIndex[2]])
+        # backPropagation.printLayers()
+
     backPropagation.calculateAvgGradient()
-    print("Value of Gradient from backpropagation: ", layers[weightIndex[0]-1].gradient[weightIndex[1]][weightIndex[2]])
+    print("Average Algorithm computed Gradient: ", layers[weightIndex[0]-1].gradient[weightIndex[1]][weightIndex[2]])
     return layers[weightIndex[0]-1].gradient[weightIndex[1]][weightIndex[2]]
 
 def initTest1():
@@ -137,7 +151,9 @@ def initTest2():
 def run_all_weights(neuronsPerLayer, initLayersFunc, x_train, y_train, regularizationValue=0):
     epsilons = [0.000001, 0.1]
     for epsilon in epsilons:
-        print(f"\nRunning with ε = {epsilon}")
+        # print("----------------------------------------------")
+        print(f"\n\t\tRunning with epsilon = {epsilon}")
+        print("\t\t------------------------------")
         layers = initLayersFunc()
         for layer_idx, layer in enumerate(layers):
             if layer.weight is None:
@@ -145,19 +161,19 @@ def run_all_weights(neuronsPerLayer, initLayersFunc, x_train, y_train, regulariz
             rows, cols = layer.weight.shape
             for i in range(rows):
                 for j in range(cols):
-                    print(f"\n--- Layer {layer_idx+1}, Weight[{i},{j}] ---")
+                    print(f"\n\t--- Layer {layer_idx+1}, Weight[{i},{j}] ---")
                     # Estimate numerical gradient
                     layers = initLayersFunc()
-                    errorDerivative(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), epsilon=epsilon, regularizationValue=regularizationValue)
+                    numericalGradient(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), epsilon=epsilon, regularizationValue=regularizationValue)
                     # Compute backprop gradient
                     layers = initLayersFunc()
-                    actualErrorDerivative(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), regularizationValue=regularizationValue)
+                    algoGradient(layers, x_train, y_train, weightIndex=(layer_idx+1, i, j), regularizationValue=regularizationValue)
 
 
 
 if __name__ == "__main__":
     test1 = True
-    test2 = True
+    test2 = False
     if test1:
         print("\n------------------------")
         print("Backpropagation File 1")

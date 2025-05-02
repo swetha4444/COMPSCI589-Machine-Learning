@@ -39,9 +39,9 @@ outputLayer = Layer(neuronsPerLayer[2], 0, l=3)
 layers.append(outputLayer)
 
 
-# print("-------------------------------------")
-# print("Testing Forward Propagation")
-# print("-------------------------------------")
+print("-------------------------------------")
+print("Testing Forward Propagation")
+print("-------------------------------------")
 
 forwardPropagation = ForwardPropagation(layers=layers, batchSize=2)
 

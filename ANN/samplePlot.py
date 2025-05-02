@@ -1,48 +1,60 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
+import numpy as np
 
-# Style
+# Define the data from the provided table
+model_architectures = [
+    "[6, 20, 1]",
+    "[6, 8, 1]",
+    "[6, 4, 8, 1]",
+    "[6, 8, 4, 2, 1]",
+    "[6, 4, 8, 16, 1]",
+    "[6, 8, 10, 8, 1]",
+    "[6, 16, 8, 2, 1]",
+    "[6, 12, 7, 3, 1]"
+]
+
+accuracy = [78.804, 79.704, 79.930, 80.042, 78.576, 78.916, 81.056, 79.592]
+f1_score = [71.682, 72.422, 72.210, 72.132, 71.924, 71.770, 73.140, 72.242]
+
+# Calculate mean and std
+metrics = {
+    "Accuracy": accuracy,
+    "F1 Score": f1_score,
+}
+metric_means = {key: np.mean(values) for key, values in metrics.items()}
+metric_stds = {key: np.std(values) for key, values in metrics.items()}
+
+# Set seaborn style
 sns.set(style="whitegrid")
 palette = sns.color_palette("Set2")
 
-# Data
-model_details = [
-    "[11, 5, 1]\nreg=0.01, step=0.05, batch=10",
-    "[11, 5, 10, 1]\nreg=0.01, step=0.05, batch=10",
-    "[11, 10, 5, 8, 1]\nreg=0.01, step=0.05, batch=32",
-    "[11, 2, 4, 8, 16, 1]\nreg=0.01, step=0.05, batch=32",
-    "[11, 10, 5, 8, 1]\nreg=0.01, step=0.05, batch=20",
-    "[11, 16, 8, 1]\nreg=0.01, step=0.01, batch=30",
-    "[11, 4, 2, 4, 1]\nreg=0.1, step=0.1, batch=10, eps=1e-5"
-]
-accuracy = [80.378, 80.798, 77.008, 73.64, 78.482, 74.062, 69.176]
-f1 = [87.384, 87.616, 85.626, 84.0, 86.414, 84.152, 81.782]
+# Plotting
+plt.figure(figsize=(14, 8))
 
-# Create DataFrame
-df = pd.DataFrame({
-    'Model Details': model_details,
-    'Accuracy': accuracy,
-    'F1 Score': f1
-})
+for i, (metric_name, values) in enumerate(metrics.items()):
+    plt.errorbar(
+        model_architectures,
+        values,
+        yerr=metric_stds[metric_name],
+        fmt='o',
+        label=f"{metric_name} (Mean: {metric_means[metric_name]:.2f})",
+        color=palette[i],
+        capsize=5,
+        capthick=2,
+        markersize=8,
+        linestyle='--'
+    )
 
-# Plot
-plt.figure(figsize=(14, 6))
-ax = sns.lineplot(data=df, x='Model Details', y='Accuracy', marker='o', label='Accuracy', palette=palette)
-sns.lineplot(data=df, x='Model Details', y='F1 Score', marker='s', label='F1 Score', palette=palette)
+# Annotate metric values
+for i, (acc, f1) in enumerate(zip(accuracy, f1_score)):
+    plt.annotate(f"{acc:.2f}", (i, acc), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+    plt.annotate(f"{f1:.2f}", (i, f1), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
 
-# Annotate acc and f1 values
-for i in range(len(df)):
-    plt.text(i, accuracy[i] + 0.4, f"{accuracy[i]:.2f}", ha='center', fontsize=9)
-    plt.text(i, f1[i] + 0.4, f"{f1[i]:.2f}", ha='center', fontsize=9)
-
-# Final tweaks
-plt.title("Loan Dataset: Accuracy and F1 Score Across Model Configurations")
-plt.xticks(rotation=30, ha='right')
-plt.ylim(65, 90)
-plt.ylabel("Score (%)")
-plt.xlabel("Model (Architecture + Hyperparameters)")
-plt.grid(True)
-plt.legend()
+plt.xlabel('Model Architecture', fontsize=12)
+plt.ylabel('Metric Value', fontsize=12)
+plt.title("Neural Network Configurations Performance on Titanic Dataset", fontsize=14)
+plt.xticks(ticks=range(len(model_architectures)), labels=model_architectures, rotation=45, ha='right', fontsize=10)
+plt.legend(fontsize=10, loc='upper left')
 plt.tight_layout()
 plt.show()
