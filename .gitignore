@@ -4,5 +4,18 @@ Naive Bayes/starter_code/__pycache__
 op.txt
 Random Forest/.DS_Store
 # Random Forest/main.py
-*test.py
+
 *.cpython-313.pyc
+HW4/*
+ANN/outputs/*
+.vscode/settings.json
+Decision Tree/.DS_Store
+wbdc.txt
+.gitignore
+ANN/sample2plot.py
+.gitignore
+.gitignore
+HW4/errorDerivative.py
+ANN/samplePlot.py
+ANN/visualizeArchitecture.py
+ANN/samplePlot.py
