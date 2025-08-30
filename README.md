@@ -200,7 +200,7 @@ print("Best hyperparameters:", best_params)
 └── outputs
 ```
 
-## Artificial Neural Networks - HW 2
+## Artificial Neural Networks
 
 ### Main Function: TrainModel
 
