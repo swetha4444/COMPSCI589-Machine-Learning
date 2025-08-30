@@ -1,5 +1,5 @@
 # COMPSCI-589-Machine-Learning
-This repo contains my code for developing several basic AI models from scratch and training them on data without external libraries.
+This repo contains my code for developing several basic AI models from scratch and training them on data without external libraries as a part of my ML course at UMass.
 
 ## Decision Tree
 The code includes:
